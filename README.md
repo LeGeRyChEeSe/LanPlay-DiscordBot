@@ -106,13 +106,13 @@ Please follow these steps :
 - Open a <b>Windows Terminal</b> and execute the following command to run the Discord Bot:
 
 ```docker
-docker run -e API_LAN_KEY=<your_lan_api_key> -e TOKEN=<your_discord_token> LeGeRyChEeSe/lanplay-discordbot:latest
+docker run -e API_LAN_KEY=<your_lan_api_key> -e TOKEN=<your_discord_token> garohrl/lanplay-discordbot:latest
 ```
 
 - If you want the Discord Bot running in background:
 
 ```docker
-docker run -d -e API_LAN_KEY=<your_lan_api_key> -e TOKEN=<your_discord_token> LeGeRyChEeSe/lanplay-discordbot:latest
+docker run -d -e API_LAN_KEY=<your_lan_api_key> -e TOKEN=<your_discord_token> garohrl/lanplay-discordbot:latest
 ```
 
 > Replace `<your_lan_api_key>` with your [`api_key`](#get-api-key) and replace `<your_discord_token>` with your [`token`](#create-a-bot-account).
