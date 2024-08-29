@@ -23,7 +23,6 @@ A Discord bot that provides information on <a href="http://lan-play.com">LAN Pla
 - [Commands Available](#commands-available)
 - [Contributing](#contributing)
 - [License](#license)
-- [Acknowledgements](#acknowledgements)
 - [Star History](#star-history)
 
 
@@ -142,18 +141,6 @@ Any contributions you make are **greatly appreciated**.
 ## License
 
 Distributed under the MIT License. See [LICENSE](https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot/blob/main/LICENSE) for more information.
-
-## Acknowledgements
-
-Shoutout to <b>LizardByte</b> for the Sunshine repo: https://github.com/LizardByte/Sunshine
-
-Shoutout to <b>itsmikethetech</b> for the Virtual Display Driver repo: https://github.com/itsmikethetech/Virtual-Display-Driver
-
-Thanks to <b>Cynary</b> for the Sunshine Virtual Monitor scripts: https://github.com/Cynary/sunshine-virtual-monitor
-
-Shoutout to <b>JosefNemec</b> for Playnite: https://github.com/JosefNemec/Playnite
-
-Shoutout to <b>Nonary</b> for the PlayNiteWatcher script: https://github.com/Nonary/PlayNiteWatcher
 
 ## Star History
 
