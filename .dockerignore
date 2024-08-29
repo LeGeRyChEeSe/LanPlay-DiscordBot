@@ -1,0 +1,9 @@
+.env
+**\__pycache__
+*.json
+**.jpg
+Dockerfile
+venv
+dev*.txt
+ressources
+.gitignore
