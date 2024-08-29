@@ -1,9 +1,9 @@
-<h1 align='center'>Lansbot</h1>
+<h1 align='center'>LanPlay-DiscordBot</h1>
 <p align="center">
-<img src="https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot/blob/main/lansbot.jpg?raw=true" align="center" height=205 alt="Lansbot" />
+<img src="https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot/blob/main/lansbot.jpg?raw=true" align="center" height=350 alt="LanPlay-DiscordBot" />
 </p>
 <p align="center">
-<img src='https://visitor-badge.laobi.icu/badge?page_id=LeGeRyChEeSe.Lansbot', alt='Visitors'/>
+<img src='https://visitor-badge.laobi.icu/badge?page_id=LeGeRyChEeSe.LanPlay-DiscordBot', alt='Visitors'/>
 <a href="https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot/stargazers">
 <img src="https://img.shields.io/github/stars/LeGeRyChEeSe/LanPlay-DiscordBot" alt="Stars"/>
 </a>
