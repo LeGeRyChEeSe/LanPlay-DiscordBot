@@ -21,8 +21,8 @@ jobs:
 
       - name: Build the Docker image
         run: |
-          docker build -t LeGeRyChEeSe/lanplay-discordbot:latest .
+          docker build -t garohrl/lanplay-discordbot:latest .
 
       - name: Push the Docker image
         run: |
-          docker push LeGeRyChEeSe/lanplay-discordbot:latest
+          docker push garohrl/lanplay-discordbot:latest
