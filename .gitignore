@@ -3,3 +3,9 @@ venv
 **/__pycache__
 *.json
 dev*.txt
+
+# Claude-related files
+CLAUDE.md
+.claude/
+claude_*
+*claude*

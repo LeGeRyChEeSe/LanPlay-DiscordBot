@@ -1,151 +1,320 @@
-<h1 align='center'>LanPlay-DiscordBot</h1>
-<p align="center">
-<img src="https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot/blob/main/lansbot.jpg?raw=true" align="center" height=350 alt="LanPlay-DiscordBot" />
-</p>
-<p align="center">
-<img src='https://visitor-badge.laobi.icu/badge?page_id=LeGeRyChEeSe.LanPlay-DiscordBot', alt='Visitors'/>
-<a href="https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot/stargazers">
-<img src="https://img.shields.io/github/stars/LeGeRyChEeSe/LanPlay-DiscordBot" alt="Stars"/>
-</a>
-<a href="https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot/issues">
-<img src="https://img.shields.io/github/issues/LeGeRyChEeSe/LanPlay-DiscordBot" alt="Issues"/>
-</a>
+<div align="center">
 
-<p align="center">
-A Discord bot that provides information on <a href="http://lan-play.com">LAN Play</a> servers, players, and games played.
-<p align="center">
+# 🎮 LanPlay-DiscordBot
 
-# Table of Contents
-- [Get API Key](#get-api-key)
-- [Create a Bot Account](#create-a-bot-account)
-- [Invite the bot into your server](#invite-the-bot-into-your-server)
-- [Run the Bot](#run-the-bot)
-- [Commands Available](#commands-available)
-- [Contributing](#contributing)
-- [License](#license)
-- [Star History](#star-history)
+![LanPlay-DiscordBot](static/assets/lansbot.jpg)
 
+[![Visitors](https://visitor-badge.laobi.icu/badge?page_id=LeGeRyChEeSe.LanPlay-DiscordBot)](https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot)
+[![Stars](https://img.shields.io/github/stars/LeGeRyChEeSe/LanPlay-DiscordBot)](https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot/stargazers)
+[![Issues](https://img.shields.io/github/issues/LeGeRyChEeSe/LanPlay-DiscordBot)](https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot/issues)
+[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://python.org)
+[![Docker](https://img.shields.io/badge/Docker-Supported-blue.svg)](https://docker.com)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## Get API Key
+**🎮 Modern Discord bot for real-time LAN Play server monitoring**
 
-To use the LanPlay package you will need a specific, non-transferable API key that can be retrieved from <a href="http://www.lan-play.com">LanPlay</a>.<br>
+_Monitor Nintendo Switch games, players, and servers across multiple LAN Play instances with beautiful Discord integration_
 
-Please follow these steps :
+[🚀 Quick Start](#-quick-start) • [🎯 Features](#-features) • [📖 Documentation](#-documentation) • [🤝 Support](#-support)
 
-1. Open a Web Browser and go to http://www.lan-play.com
+</div>
 
-2. Open a Console Mode (<b>Ctrl + Shift + C</b> or <b>F12</b> should work, or Google is your friend to find how to access the Console Mode 🫠)
+## 🚀 Quick Start
 
-3. Go to `Network` tab and refresh the current page
+### 🔥 Docker Installation (Recommended)
 
-4. Search a line named `getMonitors` and click on it
+**✨ Quick start with Docker Compose:**
 
-5. Open the `Payload` tab
-
-6. Copy the `api_key` value and store it in safe location for the [Run the Bot](#run-the-bot) step.
-
-## Create a Bot Account
-
-1. Make sure you’re logged on to the [Discord website](https://discord.com/).
-
-2. Navigate to the [Discord Application](https://discord.com/developers/applications) for developers.
-
-3. Click on the `New Application` button.
-
-4. Give the application a name and click `Create`.
-
-5. Navigate to the `Bot` tab to configure it.
-
-6. Make sure that `Public Bot` is ticked if you want others to invite your bot.
-
-	- You should also make sure that `Require OAuth2 Code Grant` is unchecked.
-
-7. Copy the token using the `Copy` button and store it in safe location for the [Run the Bot](#run-the-bot) step.
-
-	- <b>This is not the Client Secret at the General Information page.</b>
-
-		> It should be worth noting that this token is essentially your bot’s password. You should never share this with someone else. In doing so, someone can log in to your bot and do malicious things, such as leaving servers, ban all members inside a server, or pinging everyone maliciously.
-		>
-		> The possibilities are endless, so do not share this token.
-		>
-		> If you accidentally leaked your token, click the `Regenerate` button as soon as possible. This revokes your old token and re-generates a new one. Now you need to use the new token to login.
-
-## Invite the bot into your server
-
-1. Navigate to the [Discord Application](https://discord.com/developers/applications) for developers.
-
-2. Open the App you previously created for the Bot.
-
-3. Navigate to `OAuth2` tab.
-
-4. Scroll down and in `OAuth2 URL Generator` -> `SCOPES`, tick these boxes:
-
-	- `bot`
-	- `applications.commands`
-
-5. Scroll down and in `BOT PERMISSIONS`, tick these boxes:
-
-	- `Manage Expressions`
-	- `Create Expressions`
-	- `Send Messages`
-	- `Send Messages in Threads`
-	- `Embed Links`
-	- `Read Message History`
-
-6. Make sure that `INTEGRATION TYPE` value is `Guild Install`.
-
-7. Copy/Paste the `GENERATED URL` at bottom to a new Browser Tab and add it to your Discord Server.
-
-## Run the Bot
-
-- Download [Docker](https://www.docker.com) and install it on your computer.
-
-- Make sure you got both [api_key](#get-api-key) and [token](#create-a-bot-account) values, and [invited the bot to your server](#invite-the-bot-into-your-server).
-
-- Open a <b>Windows Terminal</b> and execute the following command to run the Discord Bot:
-
-```docker
-docker run -e API_LAN_KEY=<your_lan_api_key> -e TOKEN=<your_discord_token> garohrl/lanplay-discordbot:latest
+```bash
+git clone https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot.git
+cd LanPlay-DiscordBot
+cp .env.example .env
 ```
 
-- If you want the Discord Bot running in background:
-
-```docker
-docker run -d -e API_LAN_KEY=<your_lan_api_key> -e TOKEN=<your_discord_token> garohrl/lanplay-discordbot:latest
+**⚠️ IMPORTANT: Configure your .env file before starting:**
+```bash
+# Edit .env with a text editor and add your tokens:
+# TOKEN=your_discord_bot_token_here
+# API_LAN_KEY=your_lan_play_api_key_here
 ```
 
-> Replace `<your_lan_api_key>` with your [`api_key`](#get-api-key) and replace `<your_discord_token>` with your [`token`](#create-a-bot-account).
+```bash
+docker-compose up -d
+```
 
-## Commands Available
+### 📋 Installation Steps
 
-| Command | Input | Output | Permission |
-| :-----: | :--------: | :----: | :--------: |
-| `/help` | `None`     | ![Help Menu](https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot/blob/main/ressources/help.png?raw=true) | `Everybody` |
-| `/lan`  | <i>select a server</i> | ![LanPlay Server Infos](https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot/blob/main/ressources/lan.png?raw=true) | `Everybody` |
-| `/add`  | `server`<br><i>e.g. 'tekn0.net:11451'</i> | ![Status of server addition](https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot/blob/main/ressources/add.png?raw=true) | `Admin` |
-| `/delete` | `server`<br><i>e.g. 'tekn0.net:11451'</i> | ![Status of server deletion](https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot/blob/main/ressources/delete.png?raw=true) | `Admin` |
+1. **Clone the repository** from GitHub
+2. **Copy the environment template**: `cp .env.example .env`
+3. **⚠️ Configure your API keys** in the `.env` file:
+   - **Discord Bot Token**: Get from [Discord Developer Portal](https://discord.com/developers/applications)
+   - **LAN Play API Key**: Get from [lan-play.com](http://lan-play.com) (see [guide](#getting-api-key))
+4. **Start the bot** with Docker or Python
 
-## Contributing
+> **📚 Need help?** [View detailed setup guide](#-discord-bot-setup)
 
-Any contributions you make are **greatly appreciated**.
+## 🎯 Features
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/NewFeature`)
-3. Commit your Changes (`git commit -m 'Add some NewFeature'`)
-4. Push to the Branch (`git push origin feature/NewFeature`)
-5. Open a Pull Request
+### 🛠️ What You Get
 
+#### 🌟 Core Components
+- 🎮 **Real-time Game Monitoring**: Display active Nintendo Switch games and player counts
+- 🌐 **Multi-Server Support**: Monitor multiple LAN Play servers simultaneously
+- 🔧 **Custom Server Management**: Administrators can add/remove custom servers
 
-<i>Thanks to every [contributors](https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot/graphs/contributors) who have contributed in this project.</i>
+#### 🎲 Additional Features
+- 🌍 **Multi-language Support**: Available in English and French
+- 📊 **Server Uptime Tracking**: Display server reliability information
+- 🎨 **Rich Embeds**: Beautiful Discord embeds with game icons and player information
 
-## License
+### ✨ Smart Features
+- 🐳 **Docker Ready**: Fully containerized for easy deployment
+- 🔒 **Security First**: Non-root Docker containers and input validation
 
-Distributed under the MIT License. See [LICENSE](https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot/blob/main/LICENSE) for more information.
+## 📖 Documentation
 
-## Star History
+**Quick Links:**
+- [Discord Bot Setup Guide](#-discord-bot-setup)
+- [Configuration Guide](#️-configuration)
+- [Commands Reference](#-commands)
+- [Project Structure](#-project-structure)
+
+### 🔧 Installation Methods
+
+#### 🐳 Docker (Recommended)
+
+**Using Docker Compose:**
+```bash
+# 1. Clone and navigate
+git clone https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot.git
+cd LanPlay-DiscordBot
+
+# 2. Create environment file
+cp .env.example .env
+
+# 3. ⚠️ EDIT .env file with your tokens:
+# TOKEN=your_discord_bot_token_here
+# API_LAN_KEY=your_lan_play_api_key_here
+
+# 4. Start the bot
+docker-compose up -d
+```
+
+**Using Docker Run:**
+```bash
+docker run -d \
+  --name lanplay-discordbot \
+  -e TOKEN=your_discord_bot_token_here \
+  -e API_LAN_KEY=your_lan_play_api_key_here \
+  -v bot_data:/app/data \
+  garohrl/lanplay-discordbot:latest
+```
+
+#### 🛠️ Manual Installation
+
+```bash
+# 1. Clone and navigate
+git clone https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot.git
+cd LanPlay-DiscordBot
+
+# 2. Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Create environment file
+cp .env.example .env
+
+# 5. ⚠️ EDIT .env file with your API keys:
+# TOKEN=your_discord_bot_token_here
+# API_LAN_KEY=your_lan_play_api_key_here
+
+# 6. Start the bot
+python main.py
+```
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+Create a `.env` file with the following variables:
+
+```env
+# Discord Bot Token (Required)
+TOKEN=your_discord_bot_token
+
+# LAN Play API Key (Required)
+API_LAN_KEY=your_lan_play_api_key
+```
+
+### Getting API Key
+
+**📋 Step-by-step guide to get your LAN Play API key:**
+
+1. **Visit** [lan-play.com](http://www.lan-play.com)
+2. **Open Developer Tools** (`F12` or `Ctrl+Shift+I`)
+3. **Go to Network tab** and refresh the page
+4. **Find the `getMonitors` request** and click on it
+5. **In the Payload tab**, copy the `api_key` value
+6. **Add it to your .env file**: `API_LAN_KEY=your_copied_api_key_here`
+
+> ⚠️ **Important**: Without a valid API key, the bot cannot fetch LAN Play server data!
+
+## 📱 Discord Bot Setup
+
+### Creating a Discord Application
+
+1. Go to the [Discord Developer Portal](https://discord.com/developers/applications)
+2. Click **"New Application"** and give it a name
+3. Navigate to the **"Bot"** section
+4. Click **"Add Bot"** and confirm
+5. Copy the bot token and add it to your `.env` file
+
+### Bot Permissions
+
+The bot requires the following permissions:
+- `Send Messages`
+- `Send Messages in Threads` 
+- `Embed Links`
+- `Read Message History`
+- `Manage Expressions` (for game icons)
+- `Create Expressions`
+- `Use Slash Commands`
+
+### Inviting the Bot
+
+1. In the Discord Developer Portal, go to **OAuth2 → URL Generator**
+2. Select these scopes:
+   - `bot`
+   - `applications.commands`
+3. Select the permissions listed above
+4. Use the generated URL to invite the bot to your server
+
+> ⚠️ **Security Note**: Keep your bot token secret! Never share it publicly or commit it to version control.
+
+## 🎮 Commands
+
+| Command | Description | Usage | Permission | Preview |
+|---------|-------------|-------|------------|---------|
+| `/help` | Display help menu and available commands | `/help` | Everyone | ![Help](static/assets/ressources/help.png) |
+| `/lan` | Display LAN Play server information and active games | `/lan` | Everyone | ![LAN](static/assets/ressources/lan.png) |
+| `/add` | Add a custom LAN Play server to monitoring | `/add server:tekn0.net:11451` | Administrator | ![Add](static/assets/ressources/add.png) |
+| `/delete` | Remove a custom LAN Play server | `/delete server:tekn0.net:11451` | Administrator | ![Delete](static/assets/ressources/delete.png) |
+| `/version` | Display bot version and build information | `/version` | Everyone | - |
+| `/changelog` | Show recent changes and release notes | `/changelog [count:5]` | Everyone | - |
+
+### Command Examples
+
+#### `/lan` Command
+Shows server selection menu with:
+- Server uptime percentages
+- Real-time player counts (active/idle)
+- Game information with custom icons
+- Host and player details
+
+#### Admin Commands
+- **Add Server**: `/add server:your-server.com:11451`
+- **Delete Server**: `/delete server:your-server.com:11451` (with autocomplete)
+
+## 📁 Project Structure
+
+```
+LanPlay-DiscordBot/
+├── src/
+│   ├── bot/
+│   │   ├── bot.py          # Main bot class and initialization
+│   │   ├── commands.py     # Slash command handlers
+│   │   └── events.py       # Event handlers (dropdowns, etc.)
+│   ├── utils/
+│   │   ├── lanplay_client.py    # GraphQL client for LAN Play API
+│   │   ├── server_manager.py    # Custom server management
+│   │   ├── localization.py      # Multi-language support
+│   │   ├── version.py           # Semantic versioning system
+│   │   └── changelog.py         # Changelog management
+│   └── config/
+│       ├── settings.py     # Configuration management
+│       └── locale/         # Language files
+├── scripts/                # Development and build scripts
+│   ├── version_bump.py     # Python version management
+│   ├── version.sh          # Shell version commands
+│   └── docker-build.sh     # Docker build with versioning
+├── static/assets/          # Static resources
+├── tests/                  # Unit tests
+├── main.py                 # Application entry point
+├── requirements.txt        # Python dependencies
+├── Dockerfile             # Container configuration
+├── docker-compose.yml     # Docker Compose setup
+├── Makefile                # Development commands
+├── VERSION                 # Current version number
+├── CHANGELOG.md            # Structured changelog
+├── VERSIONING.md           # Versioning system documentation
+└── .env.example           # Environment template
+```
+
+## 🤝 Support
+
+### 🐛 Having Issues?
+- [Troubleshooting Guide](#-configuration)
+- [Report an Issue](https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot/issues)
+
+### 🌐 Official Resources
+- [LAN Play Website](http://lan-play.com)
+- [Discord Developer Portal](https://discord.com/developers/applications)
+
+### 🔄 Development
+
+**Running Tests:**
+```bash
+python -m pytest tests/
+```
+
+**Code Formatting:**
+```bash
+black src/
+flake8 src/
+```
+
+**Development Setup:**
+1. Fork the project
+2. Create feature branch: `git checkout -b feature/AmazingFeature`
+3. Install dependencies: `pip install -r requirements.txt`
+4. Make changes and test
+5. Document changes: `make add-change TYPE=added DESC="New feature"`
+6. Commit: `git commit -m 'feat: Add AmazingFeature'`
+7. Release: `make release-bump TYPE=minor` (if needed)
+8. Push and create Pull Request
+
+**Version Management:**
+```bash
+# Show current version
+make version
+
+# Add changelog entry
+make add-change TYPE=fixed DESC="Fix bug" ISSUE="#42"
+
+# Version bumping
+make bump-patch    # Bug fixes
+make bump-minor    # New features  
+make bump-major    # Breaking changes
+
+# Release management
+make release       # Release unreleased changes
+make changelog     # View recent changes
+```
+
+## 📝 License & Credits
+
+**📄 Licensed under [MIT License](LICENSE)**
+
+### 🙏 Special Thanks
+- [LAN Play Community](http://lan-play.com) for the amazing service
+- [Discord.py](https://github.com/Rapptz/discord.py) developers
+- All [contributors](https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot/graphs/contributors) who helped improve this project
+
+## 📈 Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=LeGeRyChEeSe/LanPlay-DiscordBot&type=Date)](https://star-history.com/#LeGeRyChEeSe/LanPlay-DiscordBot&Date)
 
-----
-
-Author/Maintainer: [Garoh](https://github.com/LeGeRyChEeSe/) | Discord: garohrl
+**👨‍💻 Author**: [Garoh](https://github.com/LeGeRyChEeSe/) • **Discord**: garohrl

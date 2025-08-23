@@ -1,9 +1,52 @@
-.env
-**\__pycache__
-*.json
-**.jpg
-Dockerfile
-venv
-dev*.txt
-ressources
+# Git
+.git
 .gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.env
+.venv
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+*.log
+*.tmp
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentation (keep README.md and CLAUDE.md)
+docs/
+!README.md
+!CLAUDE.md
+
+# Custom servers data (will be created at runtime)
+lan_servers.json
+
+# Test files
+tests/

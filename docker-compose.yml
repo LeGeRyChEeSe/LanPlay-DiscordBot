@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  lanplay-discordbot:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VERSION: ${VERSION:-development}
+        BUILD_DATE: ${BUILD_DATE}
+        VCS_REF: ${VCS_REF}
+    image: lanplay-discord-bot:${VERSION:-latest}
+    container_name: lanplay-discordbot
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    volumes:
+      - bot_data:/app/data
+    networks:
+      - lanplay_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import sys; sys.exit(0)'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  bot_data:
+    driver: local
+
+networks:
+  lanplay_network:
+    driver: bridge
