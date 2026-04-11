@@ -27,10 +27,9 @@ class LanPlayBot:
     
     def __init__(self):
         self.bot: commands.InteractionBot = None
-        self.lan_servers: Dict = {}
+        self.lan_servers: Dict = {"monitors": []}
         self._setup_environment()
         self._initialize_bot()
-        self._load_servers()
         self._register_cogs()
 
     def _setup_environment(self):
@@ -57,12 +56,18 @@ class LanPlayBot:
         except Exception as e:
             logger.error(f"Failed to load localization: {e}")
 
-    def _load_servers(self):
-        """Load LAN Play servers from API and custom servers."""
+        @self.bot.event
+        async def on_ready():
+            logger.info(f"Logged in as {self.bot.user}")
+            await self._load_servers_async()
+
+    async def _load_servers_async(self):
+        """Load LAN Play servers from API and custom servers (Async)."""
         try:
             # Load API servers
-            self.lan_servers = get_lan_servers()
-            logger.info(f"Loaded {len(self.lan_servers.get('monitors', []))} API servers")
+            api_servers = await get_lan_servers()
+            self.lan_servers["monitors"] = api_servers.get("monitors", [])
+            logger.info(f"Loaded {len(self.lan_servers['monitors'])} API servers")
             
             # Load and merge custom servers
             custom_servers = load_custom_servers()

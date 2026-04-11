@@ -221,7 +221,7 @@ class LanPlayCommands(commands.Cog):
             )
             return
 
-        custom_servers = load_custom_servers()
+        custom_servers = await load_custom_servers()
         
         if not add_custom_server(custom_servers, server, self.lan_servers):
             await inter.response.send_message(
@@ -230,7 +230,7 @@ class LanPlayCommands(commands.Cog):
             )
             return
 
-        if save_custom_servers(custom_servers):
+        if await save_custom_servers(custom_servers):
             # Update runtime server list
             from ..utils.lanplay_client import create_custom_server
             self.lan_servers["monitors"].append(create_custom_server(server))
@@ -267,7 +267,7 @@ class LanPlayCommands(commands.Cog):
             )
             return
 
-        custom_servers = load_custom_servers()
+        custom_servers = await load_custom_servers()
         custom_server = get_custom_server_by_name(custom_servers, server)
         
         if not custom_server:
@@ -279,7 +279,7 @@ class LanPlayCommands(commands.Cog):
 
         updated_servers = remove_custom_server(custom_servers, server)
         
-        if save_custom_servers(updated_servers):
+        if await save_custom_servers(updated_servers):
             # Update runtime server list
             self.lan_servers["monitors"].remove(custom_server)
             
@@ -300,7 +300,7 @@ class LanPlayCommands(commands.Cog):
         server: str
     ) -> List[str]:
         """Autocomplete for server deletion."""
-        custom_servers = load_custom_servers()
+        custom_servers = await load_custom_servers()
         return [srv["friendly_name"] for srv in custom_servers]
 
     def _create_server_options(self, locale: disnake.Locale) -> List[SelectOption]:

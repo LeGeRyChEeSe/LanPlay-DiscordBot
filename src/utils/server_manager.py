@@ -3,6 +3,7 @@
 import json
 import os
 import logging
+import aiofiles
 from typing import Dict, List, Union
 
 from ..config.settings import CUSTOM_SERVERS_FILE
@@ -13,15 +14,9 @@ logger = logging.getLogger(__name__)
 ServerDict = Dict[str, Union[str, int]]
 
 
-def load_custom_servers(filename: str = CUSTOM_SERVERS_FILE) -> List[ServerDict]:
+async def load_custom_servers(filename: str = CUSTOM_SERVERS_FILE) -> List[ServerDict]:
     """
-    Load custom servers from JSON file.
-    
-    Args:
-        filename: Path to the JSON file
-        
-    Returns:
-        List of server dictionaries
+    Load custom servers from JSON file (Async).
     """
     # Create data directory if it doesn't exist
     data_dir = os.path.dirname(filename)
@@ -32,23 +27,17 @@ def load_custom_servers(filename: str = CUSTOM_SERVERS_FILE) -> List[ServerDict]
         return []
         
     try:
-        with open(filename, 'r', encoding='utf-8') as file:
-            return json.load(file)
+        async with aiofiles.open(filename, mode='r', encoding='utf-8') as file:
+            content = await file.read()
+            return json.loads(content)
     except (json.JSONDecodeError, IOError) as e:
         logger.error(f"Failed to load custom servers from {filename}: {e}")
         return []
 
 
-def save_custom_servers(servers: List[ServerDict], filename: str = CUSTOM_SERVERS_FILE) -> bool:
+async def save_custom_servers(servers: List[ServerDict], filename: str = CUSTOM_SERVERS_FILE) -> bool:
     """
-    Save custom servers to JSON file.
-    
-    Args:
-        servers: List of server dictionaries
-        filename: Path to the JSON file
-        
-    Returns:
-        True if successful, False otherwise
+    Save custom servers to JSON file (Async).
     """
     try:
         # Create data directory if it doesn't exist
@@ -56,8 +45,9 @@ def save_custom_servers(servers: List[ServerDict], filename: str = CUSTOM_SERVER
         if data_dir and not os.path.exists(data_dir):
             os.makedirs(data_dir, exist_ok=True)
             
-        with open(filename, 'w', encoding='utf-8') as file:
-            json.dump(servers, file, indent=4, ensure_ascii=False)
+        async with aiofiles.open(filename, mode='w', encoding='utf-8') as file:
+            content = json.dumps(servers, indent=4, ensure_ascii=False)
+            await file.write(content)
         return True
     except IOError as e:
         logger.error(f"Failed to save custom servers to {filename}: {e}")
@@ -71,14 +61,6 @@ def add_custom_server(
 ) -> bool:
     """
     Add a custom server to the list if it doesn't already exist.
-    
-    Args:
-        custom_servers: Current list of custom servers
-        friendly_name: Server address to add
-        existing_servers: Existing servers from API to check against
-        
-    Returns:
-        True if server was added, False if it already exists
     """
     new_server = create_custom_server(friendly_name)
     
@@ -100,13 +82,6 @@ def add_custom_server(
 def remove_custom_server(custom_servers: List[ServerDict], friendly_name: str) -> List[ServerDict]:
     """
     Remove a custom server from the list.
-    
-    Args:
-        custom_servers: Current list of custom servers
-        friendly_name: Server address to remove
-        
-    Returns:
-        Updated list of custom servers
     """
     return [
         server for server in custom_servers 
@@ -117,13 +92,6 @@ def remove_custom_server(custom_servers: List[ServerDict], friendly_name: str) -
 def get_custom_server_by_name(custom_servers: List[ServerDict], friendly_name: str) -> ServerDict:
     """
     Get a custom server by its friendly name.
-    
-    Args:
-        custom_servers: List of custom servers
-        friendly_name: Server address to find
-        
-    Returns:
-        Server dictionary or None if not found
     """
     for server in custom_servers:
         if server.get("friendly_name") == friendly_name:

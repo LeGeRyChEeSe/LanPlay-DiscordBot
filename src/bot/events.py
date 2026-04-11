@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import List
 
 import disnake
-import requests
+import aiohttp
 from disnake.ext import commands
 
 from ..utils.lanplay_client import LanPlayClient
@@ -178,24 +178,47 @@ class LanPlayEvents(commands.Cog):
     ):
         """Add room field with custom emoji icon."""
         try:
-            icon_response = requests.get(room['iconUrl'], timeout=10)
-            icon_response.raise_for_status()
-            
             content_id = room.get('contentId', 'unknown')
-            emoji = await inter.guild.create_custom_emoji(
-                name=content_id[:32],  # Discord emoji name limit
-                image=icon_response.content
-            )
-            created_emojis.append(emoji)
+            emoji_name = content_id[:32].lower()
+            
+            # Check if emoji already exists in guild
+            emoji = disnake.utils.get(inter.guild.emojis, name=emoji_name)
+            
+            if not emoji:
+                # Cleanup if limit reached (Discord limit is 50 for non-boosted)
+                if len(inter.guild.emojis) >= 48:
+                    await self._cleanup_oldest_emoji(inter.guild)
+
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(room['iconUrl'], timeout=10) as response:
+                        response.raise_for_status()
+                        icon_data = await response.read()
+                
+                emoji = await inter.guild.create_custom_emoji(
+                    name=emoji_name,
+                    image=icon_data
+                )
             
             game_name = room.get('gameName', 'Unknown Game')
             field_name = f"{emoji} {game_name} {player_info}"
             embed.add_field(name=field_name, value=field_value, inline=False)
             
-        except (requests.RequestException, disnake.HTTPException) as e:
+        except (aiohttp.ClientError, disnake.HTTPException, Exception) as e:
             logger.warning(f"Failed to create emoji for room: {e}")
             game_playing_text = get_localization(self.bot, 'GAME_PLAYING', inter.locale)
             embed.add_field(name=game_playing_text, value=field_value, inline=False)
+
+    async def _cleanup_oldest_emoji(self, guild: disnake.Guild):
+        """Delete one emoji from the guild to make space."""
+        # Simple strategy: delete the first one that looks like a game icon (hex name)
+        for emoji in guild.emojis:
+            if re.match(r'^[0-9a-f]{16,32}$', emoji.name.lower()):
+                try:
+                    await emoji.delete(reason="LRU Cache Cleanup for LanPlayBot")
+                    logger.info(f"Deleted emoji {emoji.name} for cleanup")
+                    return
+                except disnake.HTTPException:
+                    continue
 
     async def _send_permission_error(self, inter: disnake.MessageInteraction, owner_id: str):
         """Send permission error message."""

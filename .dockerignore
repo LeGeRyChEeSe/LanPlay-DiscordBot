@@ -40,10 +40,15 @@ Dockerfile*
 docker-compose*.yml
 .dockerignore
 
-# Documentation (keep README.md and CLAUDE.md)
+# Documentation (keep README.md and GEMINI.md)
 docs/
 !README.md
-!CLAUDE.md
+!GEMINI.md
+PROJECT_ANALYSIS.md
+PROGRESS.md
+.pre-commit-config.yaml
+pytest.ini
+smoke_test.py
 
 # Custom servers data (will be created at runtime)
 lan_servers.json

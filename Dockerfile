@@ -60,12 +60,9 @@ RUN mkdir -p /app/data && chown -R botuser:botuser /app/data
 # Switch to non-root user
 USER botuser
 
-# Health check
+# Health check - just check if the process is running since it's not a web server
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8080/health', timeout=5)" || exit 1
-
-# Expose port for health checks (if needed)
-EXPOSE 8080
+    CMD pgrep -f "python -u main.py" || exit 1
 
 # Run the application
 CMD ["python", "-u", "main.py"]

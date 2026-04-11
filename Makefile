@@ -56,28 +56,18 @@ release:
 
 # Add a change to changelog (usage: make add-change TYPE=fixed DESC="Fix bug" ISSUE="#42")
 add-change:
-ifndef TYPE
-	@echo "Error: TYPE is required. Usage: make add-change TYPE=fixed DESC='Fix bug' ISSUE='#42'"
-	@echo "Types: added, changed, deprecated, removed, fixed, security"
-	@exit 1
-endif
-ifndef DESC
-	@echo "Error: DESC is required. Usage: make add-change TYPE=fixed DESC='Fix bug' ISSUE='#42'"
-	@exit 1
-endif
-ifdef ISSUE
+	@if [ -z "$(TYPE)" ] || [ -z "$(DESC)" ]; then \
+		echo "Usage: make add-change TYPE=<added|changed|deprecated|removed|fixed|security> DESC='<description>' [ISSUE='#123']"; \
+		exit 1; \
+	fi
 	@scripts/version.sh add $(TYPE) "$(DESC)" "$(ISSUE)"
-else
-	@scripts/version.sh add $(TYPE) "$(DESC)"
-endif
 
 # Release with version bump (usage: make release-bump TYPE=patch)
 release-bump:
-ifndef TYPE
-	@echo "Error: TYPE is required. Usage: make release-bump TYPE=patch"
-	@echo "Types: major, minor, patch, prerelease"
-	@exit 1
-endif
+	@if [ -z "$(TYPE)" ]; then \
+		echo "Usage: make release-bump TYPE=<major|minor|patch|prerelease>"; \
+		exit 1; \
+	fi
 	@scripts/version.sh release-bump $(TYPE)
 
 # Development commands
