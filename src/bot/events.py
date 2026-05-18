@@ -209,17 +209,16 @@ class LanPlayEvents(commands.Cog):
             embed.add_field(name=game_playing_text, value=field_value, inline=False)
 
     async def _cleanup_oldest_emoji(self, guild: disnake.Guild):
-        """Delete one emoji from the guild to make space."""
-        # Simple strategy: delete the first one that looks like a game icon (hex name)
-        for emoji in guild.emojis:
-            if re.match(r'^[0-9a-f]{16,32}$', emoji.name.lower()):
-                try:
-                    await emoji.delete(reason="LRU Cache Cleanup for LanPlayBot")
-                    logger.info(f"Deleted emoji {emoji.name} for cleanup")
-                    return
-                except disnake.HTTPException:
-                    continue
-
+        """Delete the oldest emoji from the guild to make space."""
+        if not guild.emojis:
+            return
+        # Find the oldest emoji by created_at
+        oldest_emoji = min(guild.emojis, key=lambda e: e.created_at)
+        try:
+            await oldest_emoji.delete(reason="LRU Cache Cleanup for LanPlayBot")
+            logger.info(f"Deleted emoji {oldest_emoji.name} for cleanup")
+        except disnake.HTTPException:
+            logger.warning(f"Failed to delete emoji {oldest_emoji.name} during cleanup")
     async def _send_permission_error(self, inter: disnake.MessageInteraction, owner_id: str):
         """Send permission error message."""
         embed = disnake.Embed(
