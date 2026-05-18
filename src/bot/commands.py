@@ -18,6 +18,7 @@ from ..utils.server_manager import (
 from ..utils.localization import get_localization, format_uptime_text
 from ..utils.version import version_manager
 from ..utils.changelog import changelog_manager, ChangeType
+from ..utils.session_manager import SessionManager
 from ..config.settings import LAN_MENU_URL, LAN_CONFIG_URL, IMAGE_LANPLAY_URL
 
 logger = logging.getLogger(__name__)
@@ -35,6 +36,7 @@ class LanPlayCommands(commands.Cog):
         self.bot = bot
         self.lan_servers = lan_servers
         self.lanplay_client = LanPlayClient()
+        self.session_manager = SessionManager()
 
     @commands.slash_command(name="lan")
     async def lan_command(self, inter: disnake.ApplicationCommandInteraction):
@@ -324,6 +326,138 @@ class LanPlayCommands(commands.Cog):
             for server in sorted_servers
         ]
 
+    @commands.slash_command(name="create", contexts=disnake.InteractionContextTypes.guild | disnake.InteractionContextTypes.bot_dm | disnake.InteractionContextTypes.private_channel)
+    async def create_session_command(
+        self,
+        inter: disnake.ApplicationCommandInteraction,
+        game: str,
+        host: str,
+        max_players: int = 4,
+        map_name: str = None,
+        game_type: str = None,
+        password: str = None
+    ):
+        """
+        Create a new LAN Play session.
+
+        Parameters
+        ----------
+        game: :class:`str`
+            The game to play (e.g., 'Super Mario Odyssey')
+        host: :class:`str`
+            The host IP or hostname (e.g., '192.168.1.100:11451')
+        max_players: :class:`int`
+            Maximum number of players (default: 4)
+        map_name: :class:`str`
+            Map or level to play (optional)
+        game_type: :class:`str`
+            Type of game (e.g., 'race', 'battle') (optional)
+        password: :class:`str`
+            Password for the session (optional)
+        """
+        if inter.guild is None:
+            await inter.response.send_message(
+                "This command is only available in servers.",
+                ephemeral=True
+            )
+            return
+
+        # Use the host as the host player name for simplicity; in a real scenario, you might want to ask for the player name.
+        host_player_name = inter.author.display_name
+        session = self.session_manager.create_session(
+            game=game,
+            host=host,
+            host_player_name=host_player_name,
+            max_players=max_players,
+            map_name=map_name,
+            game_type=game_type,
+            password=password
+        )
+        await inter.response.send_message(
+            f"Session created! ID: `{session.id}`\n"
+            f"Game: {session.game}\n"
+            f"Host: {session.host}\n"
+            f"Max Players: {session.max_players}\n"
+            f"Map: {session.map_name or 'N/A'}\n"
+            f"Game Type: {session.game_type or 'N/A'}"
+        )
+
+    @commands.slash_command(name="join", contexts=disnake.InteractionContextTypes.guild | disnake.InteractionContextTypes.bot_dm | disnake.InteractionContextTypes.private_channel)
+    async def join_session_command(
+        self,
+        inter: disnake.ApplicationCommandInteraction,
+        session_id: str
+    ):
+        """
+        Join an existing LAN Play session.
+
+        Parameters
+        ----------
+        session_id: :class:`str`
+            The ID of the session to join
+        """
+        if inter.guild is None:
+            await inter.response.send_message(
+                "This command is only available in servers.",
+                ephemeral=True
+            )
+            return
+
+        player_name = inter.author.display_name
+        success = self.session_manager.join_session(session_id, player_name)
+        if success:
+            await inter.response.send_message(
+                f"Joined session `{session_id}`!",
+                ephemeral=True
+            )
+        else:
+            await inter.response.send_message(
+                f"Failed to join session `{session_id}`. It may be full, not exist, or not accepting players.",
+                ephemeral=True
+            )
+
+    @commands.slash_command(name="leave", contexts=disnake.InteractionContextTypes.guild | disnake.InteractionContextTypes.bot_dm | disnake.InteractionContextTypes.private_channel)
+    async def leave_session_command(
+        self,
+        inter: disnake.ApplicationCommandInteraction
+    ):
+        """
+        Leave the current LAN Play session.
+        Note: This command does not take a session ID; it leaves the session the user is currently in.
+        For simplicity, we assume the user is in at most one session.
+        """
+        if inter.guild is None:
+            await inter.response.send_message(
+                "This command is only available in servers.",
+                ephemeral=True
+            )
+            return
+
+        player_name = inter.author.display_name
+        # Find a session where the player is a member
+        session_to_leave = None
+        for session in self.session_manager.get_active_sessions():
+            if player_name in session.current_players:
+                session_to_leave = session
+                break
+
+        if session_to_leave is None:
+            await inter.response.send_message(
+                "You are not in any active session.",
+                ephemeral=True
+            )
+        else:
+            success = self.session_manager.leave_session(session_to_leave.id, player_name)
+            if success:
+                await inter.response.send_message(
+                    f"Left session `{session_to_leave.id}`.",
+                    ephemeral=True
+                )
+            else:
+                await inter.response.send_message(
+                    f"Failed to leave session `{session_to_leave.id}`.",
+                    ephemeral=True
+                )
     @staticmethod
     def _validate_server_format(server: str) -> bool:
         """Validate server format (hostname:port)."""
