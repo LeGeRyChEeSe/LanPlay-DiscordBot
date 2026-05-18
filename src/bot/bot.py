@@ -14,7 +14,7 @@ from .commands import LanPlayCommands
 from .events import LanPlayEvents
 from ..utils.lanplay_client import get_lan_servers
 from ..utils.server_manager import load_custom_servers
-from ..config.settings import TOKEN, LOCALE_DIR, TIMEZONE, LOCALE_SETTING, SCAN_INTERVAL_SECONDS, ENABLE_BACKGROUND_REFRESH
+from ..config.settings import TOKEN, LOCALE_DIR, TIMEZONE, LOCALE_SETTING, SCAN_INTERVAL_SECONDS, ENABLE_BACKGROUND_REFRESH, HEARTBEAT_INTERVAL_SECONDS, ENABLE_HEARTBEAT
 
 # Configure logging
 logging.basicConfig(
@@ -40,6 +40,10 @@ class LanPlayBot:
         self._refresh_task: Optional[asyncio.Task] = None
         self._refresh_interval: int = SCAN_INTERVAL_SECONDS
         self._refresh_enabled: bool = ENABLE_BACKGROUND_REFRESH
+        # Heartbeat task management
+        self._heartbeat_task: Optional[asyncio.Task] = None
+        self._heartbeat_interval: int = HEARTBEAT_INTERVAL_SECONDS
+        self._heartbeat_enabled: bool = ENABLE_HEARTBEAT
 
     def _setup_environment(self):
         """Set up locale and timezone."""
@@ -118,6 +122,26 @@ class LanPlayBot:
                 logger.error(f"Error in background refresh task: {e}")
                 # Continue running despite errors
 
+    async def _heartbeat_task(self):
+        """Heartbeat task to log that the bot is operational."""
+        logger.info(f"Starting heartbeat task (interval: {self._heartbeat_interval}s, enabled: {self._heartbeat_enabled})")
+        
+        while not _shutdown_requested and self._heartbeat_enabled:
+            try:
+                await asyncio.sleep(self._heartbeat_interval)
+                
+                if _shutdown_requested or not self._heartbeat_enabled:
+                    break
+                    
+                logger.info("Bot is operational - heartbeat")
+                
+            except asyncio.CancelledError:
+                logger.info("Heartbeat task cancelled")
+                break
+            except Exception as e:
+                logger.error(f"Error in heartbeat task: {e}")
+                # Continue running despite errors
+
     def _handle_shutdown(self, signum, frame):
         """Handle shutdown signals (SIGTERM, SIGINT)."""
         global _shutdown_requested
@@ -143,6 +167,11 @@ class LanPlayBot:
                 self._refresh_task = self.bot.loop.create_task(self._background_refresh_task())
                 logger.info("Background refresh task started")
             
+            # Start heartbeat task if enabled
+            if self._heartbeat_enabled:
+                self._heartbeat_task = self.bot.loop.create_task(self._heartbeat_task())
+                logger.info("Heartbeat task started")
+            
             self.bot.run(TOKEN)
         except Exception as e:
             logger.error(f"Failed to start bot: {e}")
@@ -158,6 +187,15 @@ class LanPlayBot:
                 except asyncio.CancelledError:
                     pass
                 logger.info("Background refresh task stopped")
+            
+            # Cancel heartbeat task
+            if self._heartbeat_task and not self._heartbeat_task.done():
+                self._heartbeat_task.cancel()
+                try:
+                    self.bot.loop.run_until_complete(self._heartbeat_task)
+                except asyncio.CancelledError:
+                    pass
+                logger.info("Heartbeat task stopped")
             
             logger.info("Bot shutdown complete")
 

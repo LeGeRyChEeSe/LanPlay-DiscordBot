@@ -24,7 +24,10 @@ CUSTOM_SERVERS_FILE: Final[str] = "data/lan_servers.json"  # Store in data direc
 SESSION_DATA_FILE: Final[str] = "data/sessions.json"  # Store session data
 TIMEZONE: Final[str] = "Europe/Paris"
 LOCALE_SETTING: Final[str] = "en_US.UTF-8"
-
 # Background Refresh Settings
 SCAN_INTERVAL_SECONDS: Final[int] = int(os.getenv("SCAN_INTERVAL_SECONDS", "300"))  # 5 minutes
 ENABLE_BACKGROUND_REFRESH: Final[bool] = os.getenv("ENABLE_BACKGROUND_REFRESH", "true").lower() == "true"
+
+# Heartbeat Settings
+HEARTBEAT_INTERVAL_SECONDS: Final[int] = int(os.getenv("HEARTBEAT_INTERVAL_SECONDS", "300"))  # 5 minutes
+ENABLE_HEARTBEAT: Final[bool] = os.getenv("ENABLE_HEARTBEAT", "true").lower() == "true"
