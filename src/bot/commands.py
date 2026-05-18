@@ -175,7 +175,7 @@ class LanPlayCommands(commands.Cog):
         """Create server selection options sorted by uptime."""
         sorted_servers = sorted(
             self.lan_servers["monitors"], 
-            key=lambda x: x.get("all_time_uptime_ratio", "0"), 
+            key=lambda x: float(x.get("all_time_uptime_ratio", "0")), 
             reverse=True
         )
         
