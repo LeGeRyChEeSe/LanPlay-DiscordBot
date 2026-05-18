@@ -110,30 +110,8 @@ class LanPlayCommands(commands.Cog):
             value=version_value,
             inline=False
         )
-
-        custom_servers = await load_custom_servers()
         
-        if not add_custom_server(custom_servers, server, self.lan_servers):
-            await inter.response.send_message(
-                get_localization(self.bot, "ADD_EXISTS", inter.locale, server=server),
-                ephemeral=True
-            )
-            return
-
-        if await save_custom_servers(custom_servers):
-            # Update runtime server list
-            from ..utils.lanplay_client import create_custom_server
-            self.lan_servers["monitors"].append(create_custom_server(server))
-            
-            await inter.response.send_message(
-                get_localization(self.bot, "ADD_SUCCESS", inter.locale, server=server),
-                ephemeral=True
-            )
-        else:
-            await inter.response.send_message(
-                "Failed to save server configuration.", 
-                ephemeral=True
-            )
+        await inter.response.send_message(embed=embed)
 
     @commands.slash_command(name="delete")
     @commands.default_member_permissions(administrator=True)
