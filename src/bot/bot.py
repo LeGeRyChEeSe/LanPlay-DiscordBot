@@ -5,7 +5,7 @@ import logging
 import os
 import signal
 import asyncio
-from typing import Dict
+from typing import Dict, Optional
 
 import disnake
 from disnake.ext import commands
@@ -14,7 +14,7 @@ from .commands import LanPlayCommands
 from .events import LanPlayEvents
 from ..utils.lanplay_client import get_lan_servers
 from ..utils.server_manager import load_custom_servers
-from ..config.settings import TOKEN, LOCALE_DIR, TIMEZONE, LOCALE_SETTING
+from ..config.settings import TOKEN, LOCALE_DIR, TIMEZONE, LOCALE_SETTING, SCAN_INTERVAL_SECONDS, ENABLE_BACKGROUND_REFRESH
 
 # Configure logging
 logging.basicConfig(
@@ -36,6 +36,10 @@ class LanPlayBot:
         self._setup_environment()
         self._initialize_bot()
         self._register_cogs()
+        # Background refresh task management
+        self._refresh_task: Optional[asyncio.Task] = None
+        self._refresh_interval: int = SCAN_INTERVAL_SECONDS
+        self._refresh_enabled: bool = ENABLE_BACKGROUND_REFRESH
 
     def _setup_environment(self):
         """Set up locale and timezone."""
@@ -92,6 +96,28 @@ class LanPlayBot:
         except Exception as e:
             logger.error(f"Failed to register cogs: {e}")
 
+    async def _background_refresh_task(self):
+        """Background task to periodically refresh server list."""
+        logger.info(f"Starting background refresh task (interval: {self._refresh_interval}s, enabled: {self._refresh_enabled})")
+        
+        while not _shutdown_requested and self._refresh_enabled:
+            try:
+                await asyncio.sleep(self._refresh_interval)
+                
+                if _shutdown_requested or not self._refresh_enabled:
+                    break
+                    
+                logger.debug("Running background server refresh...")
+                await self._load_servers_async()
+                logger.debug("Background server refresh completed")
+                
+            except asyncio.CancelledError:
+                logger.info("Background refresh task cancelled")
+                break
+            except Exception as e:
+                logger.error(f"Error in background refresh task: {e}")
+                # Continue running despite errors
+
     def _handle_shutdown(self, signum, frame):
         """Handle shutdown signals (SIGTERM, SIGINT)."""
         global _shutdown_requested
@@ -111,11 +137,28 @@ class LanPlayBot:
 
         try:
             logger.info("Starting LAN Play Discord Bot...")
+            
+            # Start background refresh task if enabled
+            if self._refresh_enabled:
+                self._refresh_task = self.bot.loop.create_task(self._background_refresh_task())
+                logger.info("Background refresh task started")
+            
             self.bot.run(TOKEN)
         except Exception as e:
             logger.error(f"Failed to start bot: {e}")
         finally:
             # Cleanup on shutdown
+            logger.info("Shutting down bot...")
+            
+            # Cancel background refresh task
+            if self._refresh_task and not self._refresh_task.done():
+                self._refresh_task.cancel()
+                try:
+                    self.bot.loop.run_until_complete(self._refresh_task)
+                except asyncio.CancelledError:
+                    pass
+                logger.info("Background refresh task stopped")
+            
             logger.info("Bot shutdown complete")
 
 
