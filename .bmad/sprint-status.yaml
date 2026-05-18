@@ -13,9 +13,9 @@ epic_progress:
     stories_total: 1
     total_points: 3
   EPIC-003:
-    completed_points: 8
+    completed_points: 10
     name: Operational Excellence
-    stories_completed: 4
+    stories_completed: 5
     stories_total: 8
     total_points: 16
 project_level: 2
@@ -87,7 +87,7 @@ sprints:
     title: Fix DM permissions
 - capacity_points: 30
   committed_points: 14
-  completed_points: 8
+  completed_points: 10
   end_date: '2026-06-12'
   goal: Complete session management and enhanced features
   sprint_number: 2
@@ -107,8 +107,9 @@ sprints:
     story_id: STORY-008
     title: Periodic background refresh
   - assigned_to: null
+    completion_date: '2026-05-18'
     points: 2
-    status: not_started
+    status: completed
     story_id: STORY-012
     title: Health check endpoint
   - assigned_to: null
