@@ -14,6 +14,52 @@ from ..config.settings import LIST_ALL_GAMES_URL, MONITORS_URL, API_LAN_KEY
 logger = logging.getLogger(__name__)
 
 
+async def fetch_with_retry(
+    session: aiohttp.ClientSession,
+    method: str,
+    url: str,
+    max_retries: int = 3,
+    base_delay: float = 1.0,
+    timeout: Optional[float] = 10.0,
+    **kwargs
+) -> Optional[aiohttp.ClientResponse]:
+    """
+    Perform an HTTP request with exponential backoff retry.
+
+    Args:
+        session: aiohttp ClientSession
+        method: HTTP method (GET, POST, etc.)
+        url: URL to request
+        max_retries: Maximum number of retry attempts (default: 3)
+        base_delay: Initial delay between retries in seconds (default: 1.0)
+        timeout: Request timeout in seconds (default: 10.0)
+        **kwargs: Additional arguments passed to session.request
+
+    Returns:
+        Response object if successful, None if all retries failed
+    """
+    last_exception = None
+
+    for attempt in range(max_retries):
+        try:
+            async with session.request(method, url, timeout=timeout, **kwargs) as response:
+                response.raise_for_status()
+                return response
+        except aiohttp.ClientError as e:
+            last_exception = e
+            if attempt < max_retries - 1:
+                delay = base_delay * (2 ** attempt)  # Exponential backoff: 1s, 2s, 4s
+                logger.warning(
+                    f"Request failed (attempt {attempt + 1}/{max_retries}): {e}. "
+                    f"Retrying in {delay}s..."
+                )
+                await asyncio.sleep(delay)
+            else:
+                logger.error(f"All {max_retries} retries exhausted for {method} {url}: {e}")
+
+    return None
+
+
 class TinfoilCacheManager:
     """Manages caching for Tinfoil game metadata."""
     
@@ -146,29 +192,32 @@ class LanPlayClient:
 
 async def get_lan_servers() -> Dict:
     """
-    Fetch LAN Play servers from UptimeRobot API (Async).
+    Fetch LAN Play servers from UptimeRobot API (Async) with retry.
     """
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.post(
-                MONITORS_URL, 
+            response = await fetch_with_retry(
+                session,
+                "POST",
+                MONITORS_URL,
                 json={
-                    "api_key": API_LAN_KEY, 
-                    "format": "json", 
+                    "api_key": API_LAN_KEY,
+                    "format": "json",
                     "all_time_uptime_ratio": 1
                 },
                 timeout=10
-            ) as response:
-                response.raise_for_status()
+            )
+            if response:
                 return await response.json()
+            return {"monitors": []}
     except Exception as e:
         logger.error(f"Failed to fetch LAN servers: {e}")
         return {"monitors": []}
 
 
 def _has_rooms(server: Dict) -> bool:
-    """Check if server has active rooms."""
-    return isinstance(server.get("room", []), list) and bool(server["room"])
+    """Check if server response has valid room data structure."""
+    return isinstance(server.get("room", []), list)
 
 
 def _enhance_rooms_with_game_info(rooms: List[Dict], games_dict: Dict[str, Dict]) -> None:

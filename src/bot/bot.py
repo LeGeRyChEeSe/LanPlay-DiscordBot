@@ -3,6 +3,8 @@
 import locale
 import logging
 import os
+import signal
+import asyncio
 from typing import Dict
 
 import disnake
@@ -20,6 +22,9 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Global flag for graceful shutdown
+_shutdown_requested = False
 
 
 class LanPlayBot:
@@ -70,7 +75,7 @@ class LanPlayBot:
             logger.info(f"Loaded {len(self.lan_servers['monitors'])} API servers")
             
             # Load and merge custom servers
-            custom_servers = load_custom_servers()
+            custom_servers = await load_custom_servers()
             self.lan_servers["monitors"].extend(custom_servers)
             logger.info(f"Added {len(custom_servers)} custom servers")
             
@@ -87,17 +92,31 @@ class LanPlayBot:
         except Exception as e:
             logger.error(f"Failed to register cogs: {e}")
 
+    def _handle_shutdown(self, signum, frame):
+        """Handle shutdown signals (SIGTERM, SIGINT)."""
+        global _shutdown_requested
+        signal_name = signal.Signals(signum).name
+        logger.info(f"Received {signal_name}, initiating graceful shutdown...")
+        _shutdown_requested = True
+
     def run(self):
         """Start the bot."""
         if not TOKEN:
             logger.error("Discord bot token not found. Please set the TOKEN environment variable.")
             return
-        
+
+        # Register signal handlers for graceful shutdown
+        signal.signal(signal.SIGTERM, self._handle_shutdown)
+        signal.signal(signal.SIGINT, self._handle_shutdown)
+
         try:
             logger.info("Starting LAN Play Discord Bot...")
             self.bot.run(TOKEN)
         except Exception as e:
             logger.error(f"Failed to start bot: {e}")
+        finally:
+            # Cleanup on shutdown
+            logger.info("Bot shutdown complete")
 
 
 def create_bot() -> LanPlayBot:

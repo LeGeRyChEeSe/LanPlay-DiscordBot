@@ -1,7 +1,6 @@
 # Core Dependencies
 disnake==2.10.1
 gql==3.5.3
-requests==2.32.5
 aiohttp==3.10.5
 aiofiles==24.1.0
 python-decouple==3.8

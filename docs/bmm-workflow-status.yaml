@@ -1,0 +1,47 @@
+communication_language: English
+last_updated: 2026-05-18T14:00:00.000000Z
+output_language: English
+project_level: 2
+project_name: LanPlay-DiscordBot
+project_type: other
+workflow_status:
+- description: Create comprehensive product brief
+  name: product-brief
+  phase: 1
+  status: recommended
+- description: Structured brainstorming session
+  name: brainstorm-project
+  phase: 1
+  status: optional
+- description: Market and competitive research
+  name: research
+  phase: 1
+  status: optional
+- description: Product Requirements Document
+  name: prd
+  phase: 2
+  status: docs/prd-lanplay-discordbot-2026-05-18.md
+- description: Technical Specification
+  name: tech-spec
+  phase: 2
+  status: optional
+- description: UX/UI design workflow
+  name: create-ux-design
+  phase: 2
+  status: optional
+- description: System architecture design
+  name: architecture
+  phase: 3
+  status: docs/architecture-lanplay-discordbot-2026-05-18.md
+- description: Validate architecture against requirements
+  name: solutioning-gate-check
+  phase: 3
+  status: optional
+- description: Sprint planning and story breakdown
+  name: sprint-planning
+  phase: 4
+  status: docs/sprint-plan-lanplay-discordbot-2026-05-18.md
+- description: Implementation and tracking
+  name: dev-story
+  phase: 4
+  status: recommended

@@ -1,0 +1,131 @@
+current_sprint: 1
+epic_progress:
+  EPIC-001:
+    completed_points: 4
+    name: Core Discovery & Session Management
+    stories_completed: 2
+    stories_total: 5
+    total_points: 12
+  EPIC-002:
+    completed_points: 0
+    name: Enhanced User Experience
+    stories_completed: 0
+    stories_total: 1
+    total_points: 3
+  EPIC-003:
+    completed_points: 8
+    name: Operational Excellence
+    stories_completed: 4
+    stories_total: 8
+    total_points: 16
+project_level: 2
+project_name: LanPlay-DiscordBot
+sprint_plan_path: docs/sprint-plan-lanplay-discordbot-2026-05-18.md
+sprints:
+- capacity_points: 30
+  committed_points: 17
+  completed_points: 17
+  end_date: '2026-05-29'
+  goal: Fix critical bugs and complete core functionality
+  sprint_number: 1
+  start_date: '2026-05-18'
+  status: completed
+  stories:
+  - assigned_to: null
+    completion_date: '2026-05-18'
+    points: 1
+    status: completed
+    story_id: STORY-001
+    title: Fix async/await bug
+  - assigned_to: null
+    completion_date: '2026-05-18'
+    points: 1
+    status: completed
+    story_id: STORY-002
+    title: Fix _has_rooms logic
+  - assigned_to: null
+    completion_date: '2026-05-18'
+    points: 1
+    status: completed
+    story_id: STORY-003
+    title: Fix server sorting
+  - assigned_to: null
+    completion_date: '2026-05-18'
+    points: 3
+    status: completed
+    story_id: STORY-004
+    title: Add graceful shutdown
+  - assigned_to: null
+    completion_date: '2026-05-18'
+    points: 1
+    status: completed
+    story_id: STORY-005
+    title: Remove requests lib
+  - assigned_to: null
+    completion_date: '2026-05-18'
+    points: 3
+    status: completed
+    story_id: STORY-006
+    title: Implement /discover
+  - assigned_to: null
+    completion_date: '2026-05-18'
+    points: 3
+    status: completed
+    story_id: STORY-009
+    title: Retry with backoff
+  - assigned_to: null
+    completion_date: '2026-05-18'
+    points: 2
+    status: completed
+    story_id: STORY-010
+    title: Rate limiting
+  - assigned_to: null
+    completion_date: '2026-05-18'
+    points: 2
+    status: completed
+    story_id: STORY-011
+    title: Fix DM permissions
+- capacity_points: 30
+  committed_points: 14
+  completed_points: 5
+  end_date: '2026-06-12'
+  goal: Complete session management and enhanced features
+  sprint_number: 2
+  start_date: '2026-06-01'
+  status: in_progress
+  stories:
+  - assigned_to: null
+    completion_date: '2026-05-18'
+    points: 5
+    status: completed
+    story_id: STORY-007
+    title: Session management commands
+  - assigned_to: null
+    points: 3
+    status: not_started
+    story_id: STORY-008
+    title: Periodic background refresh
+  - assigned_to: null
+    points: 2
+    status: not_started
+    story_id: STORY-012
+    title: Health check endpoint
+  - assigned_to: null
+    points: 2
+    status: not_started
+    story_id: STORY-013
+    title: Constants for magic numbers
+  - assigned_to: null
+    points: 2
+    status: not_started
+    story_id: STORY-014
+    title: Improve emoji cleanup
+team:
+  capacity_per_sprint: 30
+  size: 1
+  sprint_length_weeks: 2
+velocity:
+  rolling_average: 2
+  sprint_1: 2
+  sprint_2: null
+version: 6.0.0
