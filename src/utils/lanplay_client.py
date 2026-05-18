@@ -1,4 +1,3 @@
-"""LAN Play GraphQL client and game matching utilities."""
 
 import logging
 import asyncio
@@ -10,6 +9,7 @@ from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
 
 from ..config.settings import LIST_ALL_GAMES_URL, MONITORS_URL, API_LAN_KEY
+from ..utils.constants import RETRY_MAX_ATTEMPTS, RETRY_BASE_DELAY, HTTP_TIMEOUT_SECONDS
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +18,8 @@ async def fetch_with_retry(
     session: aiohttp.ClientSession,
     method: str,
     url: str,
-    max_retries: int = 3,
-    base_delay: float = 1.0,
+    max_retries: int = RETRY_MAX_ATTEMPTS,
+    base_delay: float = RETRY_BASE_DELAY,
     timeout: Optional[float] = 10.0,
     **kwargs
 ) -> Optional[aiohttp.ClientResponse]:
@@ -85,7 +85,7 @@ class TinfoilCacheManager:
         logger.info("Updating Tinfoil game cache...")
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(LIST_ALL_GAMES_URL, timeout=30) as response:
+                async with session.get(LIST_ALL_GAMES_URL, timeout=HTTP_TIMEOUT_SECONDS) as response:
                     response.raise_for_status()
                     data = await response.json()
                     

@@ -44,4 +44,4 @@ workflow_status:
 - description: Implementation and tracking
   name: dev-story
   phase: 4
-  status: recommended
+  status: docs/stories/

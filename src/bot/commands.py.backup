@@ -66,7 +66,7 @@ class LanPlayCommands(commands.Cog):
             Select(
                 placeholder=get_localization(self.bot, "SERVER_SELECT_BUTTON", inter.locale),
                 custom_id=f"lan_servers_{inter.author.id}",
-                options=self._create_server_options(inter.locale)[:MAX_SELECT_OPTIONS]
+                options=self._create_server_options(inter.locale)[:25]
             )
         ]
 
@@ -93,23 +93,142 @@ class LanPlayCommands(commands.Cog):
         
         # Add version information
         version_info = version_manager.get_version_info()
-        version_lines = [
-            f"**Version:** {version_info['version']}",
-            f"**Major:** {version_info['major']}",
-            f"**Minor:** {version_info['minor']}",
-            f"**Patch:** {version_info['patch']}",
-        ]
-        if version_info['prerelease']:
-            version_lines.append(f"**Pre-release:** {version_info['prerelease']}")
-        if version_info['build']:
-            version_lines.append(f"**Build:** {version_info['build']}")
-        version_value = "\n".join(version_lines)
+        embed.add_field(
+            name="Version", 
+            value=f"v{version_info['version']}", 
+            inline=True
+        )
+        
+        await inter.response.send_message(embed=embed, ephemeral=True)
 
+    @commands.slash_command(name="version", contexts=disnake.InteractionContextTypes.guild | disnake.InteractionContextTypes.bot_dm | disnake.InteractionContextTypes.private_channel)
+    async def version_command(self, inter: disnake.ApplicationCommandInteraction):
+        """Display bot version and build information. {{VERSION_DESCRIPTION}}"""
+        version_info = version_manager.get_version_info()
+        
+        embed = disnake.Embed(
+            title=f"🤖 LAN Play Bot v{version_info['version']}",
+            color=disnake.Color.green(),
+            timestamp=get_timestamp()
+        )
+        embed.set_thumbnail(self.bot.user.display_avatar.url)
+        
+        # Version details
         embed.add_field(
             name="📋 Version Details",
-            value=version_value,
+            value=(
+                f"**Version:** {version_info['version']}\n"
+                f"**Major:** {version_info['major']}\n"
+                f"**Minor:** {version_info['minor']}\n"
+               f\"**Patch:** {version_info['patch']}\"\n
+               f\"\\n**Pre-release:** {version_info['prerelease']}\" if version_info['prerelease'] else \"\"\\n\"
+               f\"\\n**Build:** {version_info['build']}\" if version_info['build'] else \"\"\\n\"
+           ),
             inline=False
         )
+        
+        # Build information
+        embed.add_field(
+            name="🔨 Build Information",
+            value=(
+                f"**Built:** {datetime.fromisoformat(version_info['build_date']).strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
+                f"**Type:** {'Pre-release' if version_info['is_prerelease'] else 'Release'}"
+            ),
+            inline=False
+        )
+        
+        # Get latest changes
+        unreleased = changelog_manager.get_unreleased_changes()
+        if unreleased and unreleased.has_changes():
+            embed.add_field(
+                name="🚧 Upcoming Changes",
+                value=f"{unreleased.get_total_changes()} changes pending release",
+                inline=True
+            )
+        
+        embed.set_footer(text="Use /changelog to see recent changes")
+        await inter.response.send_message(embed=embed, ephemeral=True)
+
+    @commands.slash_command(name="changelog", contexts=disnake.InteractionContextTypes.guild | disnake.InteractionContextTypes.bot_dm | disnake.InteractionContextTypes.private_channel)
+    async def changelog_command(self, inter: disnake.ApplicationCommandInteraction):
+        """Display recent changes and updates. {{CHANGELOG_DESCRIPTION}}"""
+        latest_changes = changelog_manager.get_latest_changes(3)
+        
+        embed = disnake.Embed(
+            title="📝 Recent Changes",
+            color=disnake.Color.blue(),
+            timestamp=get_timestamp()
+        )
+        embed.set_thumbnail(self.bot.user.display_avatar.url)
+        
+        if not latest_changes:
+            embed.description = "No version history available yet."
+        else:
+            for version_entry in latest_changes:
+                changes_text = ""
+                
+                for change_type in ChangeType:
+                    entries = version_entry.changes.get(change_type, [])
+                    if entries:
+                        changes_text += f"**{change_type.value}:**\n"
+                        for entry in entries[:3]:  # Limit to 3 entries per type
+                            changes_text += f"• {entry.description}\n"
+                        if len(entries) > 3:
+                            changes_text += f"• ... and {len(entries) - 3} more\n"
+                        changes_text += "\n"
+                
+                if changes_text:
+                    embed.add_field(
+                        name=f"v{version_entry.version} ({version_entry.date.strftime('%Y-%m-%d')})",
+                        value=changes_text[:1024],  # Discord field limit
+                        inline=False
+                    )
+        
+        # Add unreleased changes if any
+        unreleased = changelog_manager.get_unreleased_changes()
+        if unreleased and unreleased.has_changes():
+            unreleased_text = ""
+            for change_type in ChangeType:
+                entries = unreleased.changes.get(change_type, [])
+                if entries:
+                    unreleased_text += f"**{change_type.value}:**\n"
+                    for entry in entries[:3]:
+                        unreleased_text += f"• {entry.description}\n"
+                    if len(entries) > 3:
+                        unreleased_text += f"• ... and {len(entries) - 3} more\n"
+                    unreleased_text += "\n"
+            
+            if unreleased_text:
+                embed.add_field(
+                    name="🚧 Unreleased Changes",
+                    value=unreleased_text[:1024],
+                    inline=False
+                )
+        
+        embed.set_footer(text="Full changelog available in CHANGELOG.md")
+        await inter.response.send_message(embed=embed, ephemeral=True)
+
+    @commands.slash_command(name="add")
+    @commands.default_member_permissions(administrator=True)
+    async def add_server_command(
+        self, 
+        inter: disnake.ApplicationCommandInteraction, 
+        server: str
+    ):
+        """
+        Add a custom LAN Play server to the list. {{ADD_DESCRIPTION}}
+
+        Parameters
+        ----------
+        server: :class:`str`
+            The custom server to add (e.g., 'example.com:11451') {{ADD_PARAMETER}}
+        """
+        if not self._validate_server_format(server):
+            await inter.response.send_message(
+                get_localization(self.bot, "ADD_ERROR", inter.locale), 
+                ephemeral=True
+            )
+            return
 
         custom_servers = await load_custom_servers()
         

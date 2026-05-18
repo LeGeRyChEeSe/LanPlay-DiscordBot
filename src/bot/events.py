@@ -185,8 +185,8 @@ class LanPlayEvents(commands.Cog):
             emoji = disnake.utils.get(inter.guild.emojis, name=emoji_name)
             
             if not emoji:
-                # Cleanup if limit reached (Discord limit is 50 for non-boosted)
-                if len(inter.guild.emojis) >= 48:
+                # Cleanup if limit reached (Discord limit is EMOJI_LIMIT_STANDARD for non-boosted)
+                if len(inter.guild.emojis) >= EMOJI_LIMIT_SOFT:
                     await self._cleanup_oldest_emoji(inter.guild)
 
                 async with aiohttp.ClientSession() as session:
