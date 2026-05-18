@@ -1,4 +1,4 @@
-current_sprint: 1
+current_sprint: 2
 epic_progress:
   EPIC-001:
     completed_points: 4
@@ -7,9 +7,9 @@ epic_progress:
     stories_total: 5
     total_points: 12
   EPIC-002:
-    completed_points: 0
+    completed_points: 3
     name: Enhanced User Experience
-    stories_completed: 0
+    stories_completed: 1
     stories_total: 1
     total_points: 3
   EPIC-003:
@@ -87,7 +87,7 @@ sprints:
     title: Fix DM permissions
 - capacity_points: 30
   committed_points: 14
-  completed_points: 5
+  completed_points: 8
   end_date: '2026-06-12'
   goal: Complete session management and enhanced features
   sprint_number: 2
@@ -101,8 +101,9 @@ sprints:
     story_id: STORY-007
     title: Session management commands
   - assigned_to: null
+    completion_date: '2026-05-18'
     points: 3
-    status: not_started
+    status: completed
     story_id: STORY-008
     title: Periodic background refresh
   - assigned_to: null
