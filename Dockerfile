@@ -1,5 +1,5 @@
 # Use Python 3.12 slim image for better security and smaller size
-FROM python:3.12-slim
+FROM python:3.13-slim
 
 # Build arguments for version information
 ARG VERSION="unknown"
@@ -19,9 +19,7 @@ LABEL org.opencontainers.image.title="LAN Play Discord Bot" \
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     LANG=en_US.UTF-8 \
-    LC_ALL=en_US.UTF-8 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    LC_ALL=en_US.UTF-8
 
 # Create non-root user for security
 RUN groupadd -r botuser && useradd -r -g botuser botuser
@@ -29,23 +27,24 @@ RUN groupadd -r botuser && useradd -r -g botuser botuser
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies and build tools
+# Install system dependencies and uv installer dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     locales \
     gcc \
     libc6-dev \
+    curl \
+    ca-certificates \
     && locale-gen en_US.UTF-8 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies and remove build tools after
-RUN pip install --upgrade pip setuptools wheel && \
-    pip install -r requirements.txt && \
-    apt-get remove --purge -y gcc libc6-dev && \
-    apt-get autoremove -y
+# Install Python dependencies with uv and remove build tools after
+RUN uv pip install -r requirements.txt \
+    && apt-get remove --purge -y gcc libc6-dev curl ca-certificates \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy application code
 COPY --chown=botuser:botuser . .

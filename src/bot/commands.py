@@ -96,6 +96,16 @@ class LanPlayCommands(commands.Cog):
 
     async def lan_command(self, inter: disnake.ApplicationCommandInteraction):
 
+        # Rate limit check        if not DISCOVERY_RATE_LIMITER.is_allowed(inter.author.id):            await inter.response.send_message(                "You are using this command too frequently. Please wait a moment before trying again.",                ephemeral=True            )            return
+
+        # Rate limit check
+        if not DISCOVERY_RATE_LIMITER.is_allowed(inter.author.id):
+            await inter.response.send_message(
+                "You are using this command too frequently. Please wait a moment before trying again.",
+                ephemeral=True
+            )
+            return
+
         """Display current games on LAN Play servers. {{LAN_DESCRIPTION}}"""
 
         embed = disnake.Embed(color=disnake.Color.blue())
@@ -139,18 +149,19 @@ class LanPlayCommands(commands.Cog):
             )
 
         ]
-
-
-
-        await inter.response.send_message(embed=embed, components=components)
-
-
-
     @commands.slash_command(name="help", contexts=disnake.InteractionContextTypes.guild | disnake.InteractionContextTypes.bot_dm | disnake.InteractionContextTypes.private_channel)
 
     async def help_command(self, inter: disnake.ApplicationCommandInteraction):
 
         """Display help menu for LAN's Bot commands. {{HELP_DESCRIPTION}}"""
+
+        # Rate limit check
+        if not DISCOVERY_RATE_LIMITER.is_allowed(inter.author.id):
+            await inter.response.send_message(
+                "You are using this command too frequently. Please wait a moment before trying again.",
+                ephemeral=True
+            )
+            return
 
         embed = disnake.Embed(
 
@@ -221,13 +232,6 @@ class LanPlayCommands(commands.Cog):
             inline=False
 
         )
-
-        
-
-        await inter.response.send_message(embed=embed)
-
-
-
     @commands.slash_command(name="delete")
 
     @commands.default_member_permissions(administrator=True)
@@ -279,15 +283,6 @@ class LanPlayCommands(commands.Cog):
         
 
         if not custom_server:
-
-            await inter.response.send_message(
-
-                f"Server {server} not found in custom servers.",
-
-                ephemeral=True
-
-            )
-
             return
 
 
@@ -313,18 +308,14 @@ class LanPlayCommands(commands.Cog):
             )
 
         else:
-
             await inter.response.send_message(
-
-                "Failed to save server configuration.",
-
+                f"Failed to join session `{session_id}`. It may be full, not exist, or not accepting players.",
                 ephemeral=True
-
             )
-
-
-
-    @delete_server_command.autocomplete("server")
+            await inter.response.send_message(
+                "Failed to save server configuration.",
+                ephemeral=True
+            )
 
     async def server_autocomplete(
 
@@ -390,7 +381,7 @@ class LanPlayCommands(commands.Cog):
     @commands.slash_command(name="add")
     @commands.default_member_permissions(administrator=True)
     async def add_server_command(
-        self, 
+        # Rate limit check        if not ADD_SERVER_RATE_LIMITER.is_allowed(inter.author.id):            await inter.response.send_message(                "You are using this command too frequently. Please wait a moment before trying again.",                ephemeral=True            )            return        self, 
         inter: disnake.ApplicationCommandInteraction, 
         server: str
     ):
@@ -402,6 +393,14 @@ class LanPlayCommands(commands.Cog):
         server: :class:`str`
             The custom server to add (e.g., 'example.com:11451') {{ADD_PARAMETER}}
         """
+
+        # Rate limit check
+        if not ADD_SERVER_RATE_LIMITER.is_allowed(inter.author.id):
+            await inter.response.send_message(
+                "You are using this command too frequently. Please wait a moment before trying again.",
+                ephemeral=True
+            )
+            return
         if not self._validate_server_format(server):
             await inter.response.send_message(
                 get_localization(self.bot, "ADD_ERROR", inter.locale), 
@@ -421,6 +420,7 @@ class LanPlayCommands(commands.Cog):
         if await save_custom_servers(custom_servers):
             # Update runtime server list
             from ..utils.lanplay_client import create_custom_server
+            from ..utils.rate_limiter import DISCOVERY_RATE_LIMITER, ADD_SERVER_RATE_LIMITER
             self.lan_servers["monitors"].append(create_custom_server(server))
             
             await inter.response.send_message(
@@ -429,11 +429,13 @@ class LanPlayCommands(commands.Cog):
             )
         else:
             await inter.response.send_message(
-                "Failed to save server configuration.", 
+                f"Failed to join session `{session_id}`. It may be full, not exist, or not accepting players.",
                 ephemeral=True
             )
-
-
+            await inter.response.send_message(
+                "Failed to save server configuration.",
+                ephemeral=True
+            )
     @commands.slash_command(name="create", contexts=disnake.InteractionContextTypes.guild | disnake.InteractionContextTypes.bot_dm | disnake.InteractionContextTypes.private_channel)
 
     async def create_session_command(
@@ -493,15 +495,6 @@ class LanPlayCommands(commands.Cog):
         """
 
         if inter.guild is None:
-
-            await inter.response.send_message(
-
-                "This command is only available in servers.",
-
-                ephemeral=True
-
-            )
-
             return
 
 
@@ -527,25 +520,6 @@ class LanPlayCommands(commands.Cog):
             password=password
 
         )
-
-        await inter.response.send_message(
-
-            f"Session created! ID: `{session.id}`\n"
-
-            f"Game: {session.game}\n"
-
-            f"Host: {session.host}\n"
-
-            f"Max Players: {session.max_players}\n"
-
-            f"Map: {session.map_name or 'N/A'}\n"
-
-            f"Game Type: {session.game_type or 'N/A'}"
-
-        )
-
-
-
     @commands.slash_command(name="join", contexts=disnake.InteractionContextTypes.guild | disnake.InteractionContextTypes.bot_dm | disnake.InteractionContextTypes.private_channel)
 
     async def join_session_command(
@@ -575,15 +549,6 @@ class LanPlayCommands(commands.Cog):
         """
 
         if inter.guild is None:
-
-            await inter.response.send_message(
-
-                "This command is only available in servers.",
-
-                ephemeral=True
-
-            )
-
             return
 
 
@@ -591,29 +556,16 @@ class LanPlayCommands(commands.Cog):
         player_name = inter.author.display_name
 
         success = self.session_manager.join_session(session_id, player_name)
-
         if success:
-
             await inter.response.send_message(
-
                 f"Joined session `{session_id}`!",
-
                 ephemeral=True
-
             )
-
         else:
-
             await inter.response.send_message(
-
                 f"Failed to join session `{session_id}`. It may be full, not exist, or not accepting players.",
-
                 ephemeral=True
-
             )
-
-
-
     @commands.slash_command(name="leave", contexts=disnake.InteractionContextTypes.guild | disnake.InteractionContextTypes.bot_dm | disnake.InteractionContextTypes.private_channel)
 
     async def leave_session_command(
@@ -625,85 +577,38 @@ class LanPlayCommands(commands.Cog):
     ):
 
         """
+if inter.guild is None:
+    await inter.response.send_message(
+        "This command is only available in servers.",
+        ephemeral=True
+    )
+    return
 
-        Leave the current LAN Play session.
+player_name = inter.author.display_name
 
-        Note: This command does not take a session ID; it leaves the session the user is currently in.
+# Find a session where the player is a member
+session_to_leave = None
+for session in self.session_manager.get_active_sessions():
+    if player_name in session.current_players:
+        session_to_leave = session
+        break
 
-        For simplicity, we assume the user is in at most one session.
+if session_to_leave is None:
+    await inter.response.send_message(
+        "You are not in any active session.",
+        ephemeral=True
+    )
+    return
 
-        """
-
-        if inter.guild is None:
-
-            await inter.response.send_message(
-
-                "This command is only available in servers.",
-
-                ephemeral=True
-
-            )
-
-            return
-
-
-
-        player_name = inter.author.display_name
-
-        # Find a session where the player is a member
-
-        session_to_leave = None
-
-        for session in self.session_manager.get_active_sessions():
-
-            if player_name in session.current_players:
-
-                session_to_leave = session
-
-                break
-
-
-
-        if session_to_leave is None:
-
-            await inter.response.send_message(
-
-                "You are not in any active session.",
-
-                ephemeral=True
-
-            )
-
-        else:
-
-            success = self.session_manager.leave_session(session_to_leave.id, player_name)
-
-            if success:
-
-                await inter.response.send_message(
-
-                    f"Left session `{session_to_leave.id}`.",
-
-                    ephemeral=True
-
-                )
-
-            else:
-
-                await inter.response.send_message(
-
-                    f"Failed to leave session `{session_to_leave.id}`.",
-
-                    ephemeral=True
-
-                )
-
-    @staticmethod
-
-    def _validate_server_format(server: str) -> bool:
-
-        """Validate server format (hostname:port)."""
-
-        pattern = r'^[a-zA-Z0-9.-]+:\\d+$'
-
-        return bool(re.match(pattern, server))
+success = self.session_manager.leave_session(session_to_leave.id, player_name)
+if success:
+    await inter.response.send_message(
+        f"Left session `{session_to_leave.id}".
+        ephemeral=True
+    )
+else:
+    await inter.response.send_message(
+        f"Failed to leave session `{session_to_leave.id}".
+        ephemeral=True
+    )
+"""
