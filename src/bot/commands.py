@@ -5,7 +5,6 @@
 import logging
 
 import re
-
 from datetime import datetime, timezone
 
 from typing import List
@@ -13,65 +12,32 @@ from typing import List
 
 
 import disnake
-
 from disnake import SelectOption
-
 from disnake.ext import commands
-
 from disnake.ui import Button, Select
 
 
-
-from ..utils.lanplay_client import LanPlayClient
-
-from ..utils.rate_limiter import DISCOVERY_RATE_LIMITER, ADD_SERVER_RATE_LIMITER, create_custom_server
-
-from ..utils.server_manager import (
-
+from src.utils.lanplay_client import LanPlayClient, create_custom_server
+from src.utils.rate_limiter import DISCOVERY_RATE_LIMITER, ADD_SERVER_RATE_LIMITER
+from src.utils.server_manager import (
     load_custom_servers, save_custom_servers, 
-
     add_custom_server, remove_custom_server, get_custom_server_by_name
-
 )
-
-from ..utils.localization import get_localization, format_uptime_text
-
-from ..utils.version import version_manager
-
-from ..utils.changelog import changelog_manager, ChangeType
-
-from ..utils.session_manager import SessionManager
-
-from ..config.settings import LAN_MENU_URL, LAN_CONFIG_URL, IMAGE_LANPLAY_URL
-
-from ..utils.constants import (
-
+from src.utils.localization import get_localization, format_uptime_text
+from src.utils.version import version_manager
+from src.utils.changelog import changelog_manager, ChangeType
+from src.utils.session_manager import SessionManager
+from src.config.settings import LAN_MENU_URL, LAN_CONFIG_URL, IMAGE_LANPLAY_URL
+from src.utils.constants import (
     MAX_SELECT_OPTIONS,
-
     EMOJI_LIMIT_STANDARD,
-
     EMOJI_LIMIT_SOFT,
-
     SERVER_FORMAT_PATTERN,
-
     TINFOIL_CACHE_TTL_HOURS,
-
 )
-
-from ..config.settings import TOKEN, API_LAN_KEY, LOCALE_DIR, TIMEZONE, LOCALE_SETTING
+from src.config.settings import TOKEN, API_LAN_KEY, LOCALE_DIR, TIMEZONE, LOCALE_SETTING
 
 logger = logging.getLogger(__name__)
-
-
-
-
-
-def get_timestamp() -> datetime:
-
-    """Get current UTC timestamp."""
-
-    return datetime.now(timezone.utc)
-
 
 
 
