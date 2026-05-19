@@ -110,11 +110,15 @@ The system shall provide real-time updates on game discovery, session status, an
 The system shall provide an intuitive set of Discord commands and interactions for all features.
 
 **Acceptance Criteria:**
-- [ ] Comprehensive help system with `/lanplay help`
+- [ ] Comprehensive help system with `/lanplay help` that executes without error and shows version info
 - [ ] Command autocomplete and validation
-- [ ] Error messages are user-friendly and actionable
+- [ ] Error messages are user-friendly and actionable (e.g., server add/delete commands provide appropriate error messages)
 - [ ] Interface works in both DM and guild channels
 - [ ] Permission system restricts admin-only functions appropriately
+- [ ] All commands are free of duplicate code and unnecessary rate limit checks
+- [ ] Missing imports are added at the module level (no inline imports)
+- [ ] `/lanplay version` and `/lanplay changelog` commands are implemented
+- [ ] `/lanplay create` command is fully implemented and functional
 
 ### FR-006: Emoji Management
 **Priority:** Must Have

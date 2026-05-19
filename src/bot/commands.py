@@ -24,6 +24,8 @@ from disnake.ui import Button, Select
 
 from ..utils.lanplay_client import LanPlayClient
 
+from ..utils.rate_limiter import DISCOVERY_RATE_LIMITER, ADD_SERVER_RATE_LIMITER, create_custom_server
+
 from ..utils.server_manager import (
 
     load_custom_servers, save_custom_servers, 
@@ -96,7 +98,6 @@ class LanPlayCommands(commands.Cog):
 
     async def lan_command(self, inter: disnake.ApplicationCommandInteraction):
 
-        # Rate limit check        if not DISCOVERY_RATE_LIMITER.is_allowed(inter.author.id):            await inter.response.send_message(                "You are using this command too frequently. Please wait a moment before trying again.",                ephemeral=True            )            return
 
         # Rate limit check
         if not DISCOVERY_RATE_LIMITER.is_allowed(inter.author.id):
@@ -419,8 +420,6 @@ class LanPlayCommands(commands.Cog):
 
         if await save_custom_servers(custom_servers):
             # Update runtime server list
-            from ..utils.lanplay_client import create_custom_server
-            from ..utils.rate_limiter import DISCOVERY_RATE_LIMITER, ADD_SERVER_RATE_LIMITER
             self.lan_servers["monitors"].append(create_custom_server(server))
             
             await inter.response.send_message(
