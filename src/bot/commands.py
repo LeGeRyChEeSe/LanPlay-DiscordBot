@@ -25,7 +25,6 @@ from src.utils.server_manager import (
 )
 from src.utils.localization import get_localization, format_uptime_text
 from src.utils.version import version_manager
-from src.utils.changelog import changelog_manager, ChangeType
 from src.utils.session_manager import SessionManager
 from src.config.settings import LAN_MENU_URL, LAN_CONFIG_URL, IMAGE_LANPLAY_URL
 from src.utils.constants import (
