@@ -188,7 +188,7 @@ class LanPlayCommands(commands.Cog):
 
             )
 
-            description += f"`/{command.qualified_name}`: {localized_desc}\\n"
+            description += f"`/{command.qualified_name}`: {localized_desc}\n"
 
         
 
@@ -382,8 +382,8 @@ class LanPlayCommands(commands.Cog):
     @commands.slash_command(name="add")
     @commands.default_member_permissions(administrator=True)
     async def add_server_command(
-        # Rate limit check        if not ADD_SERVER_RATE_LIMITER.is_allowed(inter.author.id):            await inter.response.send_message(                "You are using this command too frequently. Please wait a moment before trying again.",                ephemeral=True            )            return        self, 
-        inter: disnake.ApplicationCommandInteraction, 
+        self,
+        inter: disnake.ApplicationCommandInteraction,
         server: str
     ):
         """
