@@ -35,7 +35,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
     && locale-gen en_US.UTF-8 \
-    && curl -LsSf https://astral.sh/uv/install.sh | sh
+    && curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && export PATH="/root/.local/bin:$PATH"
 
 # Copy requirements first for better caching
 COPY requirements.txt .

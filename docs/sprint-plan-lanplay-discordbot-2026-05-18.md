@@ -463,15 +463,11 @@ So that the bot doesn't fail when creating emojis at the limit
 | STORY-004 | Add graceful shutdown | EPIC-003 | Must Have | 3 | Not Started |
 | STORY-005 | Remove requests lib | EPIC-003 | Must Have | 1 | Not Started |
 | STORY-006 | Implement /discover | EPIC-001 | Must Have | 3 | Not Started |
-| STORY-007 | Session mgmt commands | EPIC-001 | Must Have | 5 | Not Started |
-| STORY-008 | Periodic refresh | EPIC-002 | Should Have | 3 | Not Started |
-| STORY-009 | Retry with backoff | EPIC-003 | Must Have | 3 | Not Started |
+|STORY-007|Session mgmt commands|EPIC-001|Must Have|5|Done|||STORY-008|Periodic refresh|EPIC-002|Should Have|3|Done|||STORY-009|Retry with backoff|EPIC-003|Must Have|3|Not Started||
 | STORY-010 | Rate limiting | EPIC-003 | Must Have | 2 | Not Started |
 | STORY-011 | Fix DM permissions | EPIC-003 | Must Have | 2 | Not Started |
-| STORY-012 | Health check endpoint | EPIC-003 | Should Have | 2 | Not Started |
-| STORY-013 | Constants for magic numbers | EPIC-003 | Low | 2 | Not Started |
-| STORY-014 | Improve emoji cleanup | EPIC-001 | Medium | 2 | Not Started |
-
+|STORY-012|Health check endpoint|EPIC-003|Should Have|2|Done|||STORY-013|Constants for magic numbers|EPIC-003|Low|2|Not Started||
+|STORY-014|Improve emoji cleanup|EPIC-001|Medium|2|Done|||
 **Total:** 14 stories, 31 points
 
 ---
@@ -493,7 +489,7 @@ So that the bot doesn't fail when creating emojis at the limit
 - STORY-010: Rate limiting (2 points) - Must Have
 - STORY-011: Fix DM permissions (2 points) - Must Have
 
-**Total:** 17 points / 30 capacity (57% utilization)
+**Total:** 17 points / 30 capacity (56% utilization)
 
 **Buffer:** 13 points for unknowns, bugs, or carryover
 
@@ -517,7 +513,7 @@ So that the bot doesn't fail when creating emojis at the limit
 - STORY-013: Constants for magic numbers (2 points) - Low
 - STORY-014: Improve emoji cleanup (2 points) - Medium
 
-**Total:** 14 points / 30 capacity (47% utilization)
+**Total:** 2 points / 30 capacity (6% utilization)
 
 **Buffer:** 16 points for unknowns, polish, or FR-003 game launching prep
 
