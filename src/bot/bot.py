@@ -5,6 +5,7 @@ import logging
 import os
 import signal
 import asyncio
+import time
 from typing import Dict, Optional
 
 import disnake
@@ -15,6 +16,7 @@ from .events import LanPlayEvents
 from ..utils.lanplay_client import get_lan_servers
 from ..utils.server_manager import load_custom_servers
 from ..config.settings import TOKEN, LOCALE_DIR, TIMEZONE, LOCALE_SETTING, SCAN_INTERVAL_SECONDS, ENABLE_BACKGROUND_REFRESH, HEARTBEAT_INTERVAL_SECONDS, ENABLE_HEARTBEAT
+from .health import start_health_server, stop_health_server
 
 # Configure logging
 logging.basicConfig(
@@ -33,6 +35,8 @@ class LanPlayBot:
     def __init__(self):
         self.bot: commands.InteractionBot = None
         self.lan_servers: Dict = {"monitors": []}
+        self._health_runner: Optional[web.AppRunner] = None
+        self._start_time: Optional[float] = None
         self._setup_environment()
         self._initialize_bot()
         self._register_cogs()
@@ -161,24 +165,36 @@ class LanPlayBot:
 
         try:
             logger.info("Starting LAN Play Discord Bot...")
-            
+            self._start_time = time.time()
+
             # Start background refresh task if enabled
             if self._refresh_enabled:
                 self._refresh_task = self.bot.loop.create_task(self._background_refresh_task())
                 logger.info("Background refresh task started")
-            
+
             # Start heartbeat task if enabled
             if self._heartbeat_enabled:
                 self._heartbeat_task = self.bot.loop.create_task(self._heartbeat_task())
                 logger.info("Heartbeat task started")
-            
+
+            # Start health check server
+            self._health_runner = self.bot.loop.run_until_complete(start_health_server(self))
+            if self._health_runner:
+                logger.info("Health check server started")
+            else:
+                logger.warning("Failed to start health check server")
+
             self.bot.run(TOKEN)
         except Exception as e:
             logger.error(f"Failed to start bot: {e}")
         finally:
             # Cleanup on shutdown
             logger.info("Shutting down bot...")
-            
+
+            # Stop health check server
+            if self._health_runner:
+                self.bot.loop.run_until_complete(stop_health_server(self._health_runner))
+
             # Cancel background refresh task
             if self._refresh_task and not self._refresh_task.done():
                 self._refresh_task.cancel()
@@ -187,7 +203,7 @@ class LanPlayBot:
                 except asyncio.CancelledError:
                     pass
                 logger.info("Background refresh task stopped")
-            
+
             # Cancel heartbeat task
             if self._heartbeat_task and not self._heartbeat_task.done():
                 self._heartbeat_task.cancel()
@@ -196,7 +212,7 @@ class LanPlayBot:
                 except asyncio.CancelledError:
                     pass
                 logger.info("Heartbeat task stopped")
-            
+
             logger.info("Bot shutdown complete")
 
 
