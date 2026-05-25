@@ -227,6 +227,12 @@ class LanPlayCommands(commands.Cog):
             The custom server to remove (e.g., 'example.com:11451') {{DELETE_PARAMETER}}
 
         """
+        if inter.guild is None:
+            await inter.response.send_message(
+                "Cette commande n'est disponible que dans les serveurs.",
+                ephemeral=True
+            )
+            return
 
         if not self._validate_server_format(server):
 
@@ -359,6 +365,12 @@ class LanPlayCommands(commands.Cog):
         server: :class:`str`
             The custom server to add (e.g., 'example.com:11451') {{ADD_PARAMETER}}
         """
+        if inter.guild is None:
+            await inter.response.send_message(
+                "Cette commande n'est disponible que dans les serveurs.",
+                ephemeral=True
+            )
+            return
 
         # Rate limit check
         if not ADD_SERVER_RATE_LIMITER.is_allowed(inter.author.id):
