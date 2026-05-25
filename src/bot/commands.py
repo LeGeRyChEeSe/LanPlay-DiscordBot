@@ -576,3 +576,95 @@ else:
         ephemeral=True
     )
 """
+
+
+    @commands.slash_command(name="discover", contexts=disnake.InteractionContextTypes.guild | disnake.InteractionContextTypes.bot_dm | disnake.InteractionContextTypes.private_channel)
+    async def discover_command(self, inter: disnake.ApplicationCommandInteraction):
+        """
+        Discover LAN Play servers and display current games.
+        """
+
+        # Rate limit check
+        if not DISCOVERY_RATE_LIMITER.is_allowed(inter.author.id):
+            await inter.response.send_message(
+                "Vous utilisez cette commande trop fréquemment. Veuillez patienter un moment avant de réessayer.",
+                ephemeral=True
+            )
+            return
+
+        await inter.response.defer()
+
+        try:
+            # Récupérer la liste des serveurs LAN Play
+            lan_servers_data = await get_lan_servers()
+            monitors = lan_servers_data.get("monitors", [])
+
+            if not monitors:
+                await inter.followup.send(
+                    "Aucun serveur LAN Play trouvé.",
+                    ephemeral=True
+                )
+                return
+
+            embed = disnake.Embed(
+                title="🔍 Découverte des serveurs LAN Play",
+                color=disnake.Color.green(),
+                timestamp=datetime.now(timezone.utc)
+            )
+
+            # Limiter le nombre de serveurs pour éviter les embeds trop gros
+            max_servers_to_show = 10
+            servers_to_process = monitors[:max_servers_to_show]
+
+            for server_info in servers_to_process:
+                server_url = server_info.get("url")
+                friendly_name = server_info.get("friendly_name", "Unknown")
+
+                if not server_url:
+                    continue
+
+                try:
+                    # Obtenir les informations du serveur
+                    server_data = await self.lanplay_client.get_server_info(server_url)
+
+                    if server_data and server_data.get("room"):
+                        rooms = server_data["room"]
+                        for room in rooms:
+                            game_name = room.get("gameName", "Jeu inconnu")
+                            host_player = room.get("hostPlayerName", "Hôte inconnu")
+                            node_count = room.get("nodeCount", 0)
+                            node_count_max = room.get("nodeCountMax", 0)
+
+                            embed.add_field(
+                                name=f"🎮 {game_name}",
+                                value=f"**Hôte:** {friendly_name}\n**Joueurs:** {node_count}/{node_count_max}\n**Hôte de la partie:** {host_player}",
+                                inline=True
+                            )
+                    else:
+                        # Serveur sans rooms actives
+                        embed.add_field(
+                            name=f"⚪ {friendly_name}",
+                            value=f"**Statut:** Serveur en ligne, aucune partie active\n**URL:** {server_url}",
+                            inline=True
+                        )
+                except Exception as e:
+                    logger.error(f"Erreur lors de l'interrogation du serveur {friendly_name}: {e}")
+                    embed.add_field(
+                        name=f"❌ {friendly_name}",
+                        value=f"**Erreur:** Impossible de contacter le serveur\n**URL:** {server_url}",
+                        inline=True
+                    )
+
+            if len(monitors) > max_servers_to_show:
+                embed.set_footer(text=f"Et {len(monitors) - max_servers_to_show} autres serveurs...")
+            else:
+                embed.set_footer(text=f"{len(monitors)} serveur(s) LAN Play vérifié(s)")
+
+            await inter.followup.send(embed=embed)
+
+        except Exception as e:
+            logger.error(f"Erreur lors de la découverte des serveurs LAN Play: {e}")
+            await inter.followup.send(
+                "Une erreur est survenue lors de la découverte des serveurs.",
+                ephemeral=True
+            )

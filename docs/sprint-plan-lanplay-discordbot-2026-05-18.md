@@ -457,19 +457,8 @@ So that the bot doesn't fail when creating emojis at the limit
 
 | ID | Title | Epic | Priority | Points | Status |
 |----|-------|------|----------|--------|--------|
-| STORY-001 | Fix async/await bug | EPIC-003 | Must Have | 1 | Not Started |
-| STORY-002 | Fix _has_rooms logic | EPIC-001 | Must Have | 1 | Not Started |
-| STORY-003 | Fix server sorting | EPIC-001 | Must Have | 1 | Not Started |
-| STORY-004 | Add graceful shutdown | EPIC-003 | Must Have | 3 | Not Started |
-| STORY-005 | Remove requests lib | EPIC-003 | Must Have | 1 | Not Started |
-| STORY-006 | Implement /discover | EPIC-001 | Must Have | 3 | Not Started |
-|STORY-007|Session mgmt commands|EPIC-001|Must Have|5|Done|||STORY-008|Periodic refresh|EPIC-002|Should Have|3|Done|||STORY-009|Retry with backoff|EPIC-003|Must Have|3|Not Started||
-| STORY-010 | Rate limiting | EPIC-003 | Must Have | 2 | Not Started |
-| STORY-011 | Fix DM permissions | EPIC-003 | Must Have | 2 | Not Started |
-|STORY-012|Health check endpoint|EPIC-003|Should Have|2|Done|||STORY-013|Constants for magic numbers|EPIC-003|Low|2|Not Started||
-|STORY-014|Improve emoji cleanup|EPIC-001|Medium|2|Done|||
-**Total:** 14 stories, 31 points
-
+|STORY-001|Fix async/await bug|EPIC-003|Must Have|1|Done||\n|STORY-002|Fix _has_rooms logic|EPIC-001|Must Have|1|Not Started||\n|STORY-003|Fix server sorting|EPIC-001|Must Have|1|Done||\n|STORY-004|Add graceful shutdown|EPIC-003|Must Have|3|Done||\n|STORY-005|Remove requests lib|EPIC-003|Must Have|1|Done||\n|STORY-006|Implement /discover|EPIC-001|Must Have|3|Not Started||\n|STORY-007|Session mgmt commands|EPIC-001|Must Have|5|Not Started|||STORY-008|Periodic refresh|EPIC-002|Should Have|3|Done|||STORY-009|Retry with backoff|EPIC-003|Must Have|3|Not Started|||\n|STORY-010|Rate limiting|EPIC-003|Must Have|2|Not Started||\n|STORY-011|Fix DM permissions|EPIC-003|Must Have|2|Not Started|||
+|STORY-012|Health check endpoint|EPIC-003|Should Have|2|Done|||STORY-013|Constants for magic numbers|EPIC-003|Low|2|Not Started|||\n|STORY-014|Improve emoji cleanup|EPIC-001|Medium|2|Not Started||||\n**Total:** 14 stories, 31 points|\n||
 ---
 
 ## Sprint Allocation
@@ -489,12 +478,7 @@ So that the bot doesn't fail when creating emojis at the limit
 - STORY-010: Rate limiting (2 points) - Must Have
 - STORY-011: Fix DM permissions (2 points) - Must Have
 
-**Total:** 17 points / 30 capacity (56% utilization)
-
-**Buffer:** 13 points for unknowns, bugs, or carryover
-
-**Risks:**
-- STORY-006 depends on bug fixes (STORY-001, STORY-002)
+**Total:** 1 points / 30 capacity (3% utilization)
 - GraphQL client connection pooling may need research
 
 **Dependencies:**
@@ -514,11 +498,6 @@ So that the bot doesn't fail when creating emojis at the limit
 - STORY-014: Improve emoji cleanup (2 points) - Medium
 
 **Total:** 2 points / 30 capacity (6% utilization)
-
-**Buffer:** 16 points for unknowns, polish, or FR-003 game launching prep
-
-**Risks:**
-- STORY-007 is largest story (5 points) - could break down if complex
 - FR-003 (Game Launching) not included - marked as future companion client in PRD
 
 **Dependencies:**
@@ -530,10 +509,7 @@ So that the bot doesn't fail when creating emojis at the limit
 
 | Epic ID | Epic Name | Stories | Total Points | Sprint |
 |---------|-----------|---------|--------------|--------|
-| EPIC-001 | Core Discovery & Session Management | STORY-002, STORY-003, STORY-006, STORY-007, STORY-014 | 12 points | Sprint 1-2 |
-| EPIC-002 | Enhanced User Experience | STORY-008 | 3 points | Sprint 2 |
-| EPIC-003 | Operational Excellence | STORY-001, STORY-004, STORY-005, STORY-009, STORY-010, STORY-011, STORY-012, STORY-013 | 16 points | Sprint 1-2 |
-
+|EPIC-001|Core Discovery & Session Management|STORY-002, STORY-003, STORY-006, STORY-007, STORY-014|12 points|Sprint 1-2|Not Started|\n|EPIC-002|Enhanced User Experience|STORY-008|3 points|Sprint 2|Not Started|\n|EPIC-003|Operational Excellence|STORY-001, STORY-004, STORY-005, STORY-009, STORY-010, STORY-011, STORY-012, STORY-013|16 points|Sprint 1-2|Not Started|\n||
 **Note:** EPIC-001 has highest priority and most points. EPIC-003 stories (bug fixes) are prioritized first in Sprint 1.
 
 ---
@@ -542,15 +518,8 @@ So that the bot doesn't fail when creating emojis at the limit
 
 | FR ID | FR Name | Story | Sprint | Status |
 |-------|---------|-------|--------|--------|
-| FR-001 | LAN Game Discovery | STORY-006 | 1 | Not Started |
-| FR-002 | Game Session Management | STORY-007 | 2 | Not Started |
-| FR-003 | Game Launching | (Out of scope - companion client) | - | - |
-| FR-004 | Real-time Updates | STORY-008 | 2 | Not Started |
-| FR-005 | User Interface & Commands | STORY-006, STORY-007 | 1-2 | Not Started |
-| FR-006 | Emoji Management | STORY-014 | 2 | Not Started |
-| FR-007 | Configuration Management | STORY-013 | 2 | Not Started |
-| FR-008 | Logging & Monitoring | STORY-004, STORY-012 | 5 | Not Started |
-
+|FR-001|LAN Game Discovery|STORY-006|1|Not Started|Not Started|\n|FR-002|Game Session Management|STORY-007|2|Not Started|Not Started|\n|FR-003|Game Launching|(Out of scope - companion client)|-|-|||
+|FR-004|Real-time Updates|STORY-008|2|Not Started|Not Started|\n|FR-005|User Interface & Commands|STORY-006, STORY-007|1-2|Not Started|Not Started|\n|FR-006|Emoji Management|STORY-014|2|Not Started|Not Started|\n|FR-007|Configuration Management|STORY-013|2|Not Started|Not Started|\n|FR-008|Logging & Monitoring|STORY-004, STORY-012|5|Not Started|Not Started|\n||
 **Coverage:** 7/8 FRs addressed (FR-003 out of scope per PRD)
 
 ---
@@ -559,12 +528,7 @@ So that the bot doesn't fail when creating emojis at the limit
 
 | NFR ID | NFR Name | Solution | Stories | Sprint |
 |--------|----------|----------|---------|--------|
-| NFR-001 | Performance | Async I/O, caching, connection pooling | STORY-009 | 1 |
-| NFR-002 | Reliability | Retry with backoff, graceful shutdown, error handling | STORY-004, STORY-009 | 1 |
-| NFR-003 | Scalability | Efficient data structures, caching | STORY-006 | 1 |
-| NFR-004 | Security | Rate limiting, DM permissions, input validation | STORY-010, STORY-011 | 1 |
-| NFR-005 | Maintainability | Constants, clean code, tests | STORY-005, STORY-013 | 1 |
-| NFR-006 | Compatibility | Already compliant (Python 3.9+, async) | - | - |
+|NFR-001|Performance|Async I/O, caching, connection pooling|STORY-009|1|Not Started|\n|NFR-002|Reliability|Retry with backoff, graceful shutdown, error handling|STORY-004, STORY-009|1|Not Started|\n|NFR-003|Scalability|Efficient data structures, caching|STORY-006|1|Not Started|\n|NFR-004|Security|Rate limiting, DM permissions, input validation|STORY-010, STORY-011|1|Not Started|\n|NFR-005|Maintainability|Constants, clean code, tests|STORY-005, STORY-013|1|Not Started|\n|NFR-006|Compatibility|Already compliant (Python 3.9+, async)|-|-|||
 
 **Coverage:** 6/6 NFRs addressed
 
