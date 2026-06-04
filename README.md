@@ -21,26 +21,58 @@ _Monitor Nintendo Switch games, players, and servers across multiple LAN Play in
 
 ## 🚀 Quick Start
 
-### 🔥 Docker Installation (Recommended)
+### 🐳 Docker Installation (Recommended)
 
-**✨ Quick start with Docker Compose:**
+You can run the bot directly from the pre-built Docker image available on Docker Hub, eliminating the need to build locally.
 
+**✨ Option 1: Using Docker Compose (recommended for persistence)**
 ```bash
-git clone https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot.git
-cd LanPlay-DiscordBot
-cp .env.example .env
-```
+# 1. Create a directory for the bot
+mkdir lanplay-discordbot && cd lanplay-discordbot
 
-**⚠️ IMPORTANT: Configure your .env file before starting:**
-```bash
-# Edit .env with a text editor and add your tokens:
+# 2. Create environment file
+wget https://raw.githubusercontent.com/LeGeRyChEeSe/LanPlay-DiscordBot/main/.env.example -O .env
+# OR copy if you cloned the repo: cp .env.example .env
+
+# 3. ⚠️ EDIT .env file with your tokens:
 # TOKEN=your_discord_bot_token_here
 # API_LAN_KEY=your_lan_play_api_key_here
-```
 
-```bash
+# 4. Create docker-compose.yml (or use the one below)
+cat > docker-compose.yml << 'EOF'
+version: '3.8'
+services:
+  lanplay-discordbot:
+    image: garohrl/lanplay-discordbot:latest
+    container_name: lanplay-discordbot
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./data:/app/data
+EOF
+
+# 5. Start the bot
 docker-compose up -d
 ```
+
+**✨ Option 2: Simple Docker Run**
+```bash
+docker run -d \
+  --name lanplay-discordbot \
+  --restart unless-stopped \
+  -e TOKEN=your_discord_bot_token_here \
+  -e API_LAN_KEY=your_lan_play_api_key_here \
+  -v $(pwd)/data:/app/data \
+  garohrl/lanplay-discordbot:latest
+```
+
+**⚠️ IMPORTANT: Required environment variables**
+- `TOKEN`: Your Discord Bot Token (from Discord Developer Portal)
+- `API_LAN_KEY`: Your LAN Play API Key (from lan-play.com)
+
+**💡 Persistence**: To preserve custom server configurations and data between restarts, mount a volume to `/app/data` as shown above.
+
+> If you prefer to build the image yourself (e.g., for custom modifications), you can still use `docker-compose up -d --build` or `docker build -t lanplay-discordbot .` after cloning the repository.
 
 ### 📋 Installation Steps
 
@@ -83,20 +115,35 @@ docker-compose up -d
 
 #### 🐳 Docker (Recommended)
 
+You can run the bot directly from the pre-built Docker image available on Docker Hub, eliminating the need to build locally.
+
 **Using Docker Compose:**
 ```bash
-# 1. Clone and navigate
-git clone https://github.com/LeGeRyChEeSe/LanPlay-DiscordBot.git
-cd LanPlay-DiscordBot
+# 1. Create a directory for the bot
+mkdir lanplay-discordbot && cd lanplay-discordbot
 
 # 2. Create environment file
-cp .env.example .env
+wget https://raw.githubusercontent.com/LeGeRyChEeSe/LanPlay-DiscordBot/main/.env.example -O .env
+# OR copy if you cloned the repo: cp .env.example .env
 
 # 3. ⚠️ EDIT .env file with your tokens:
 # TOKEN=your_discord_bot_token_here
 # API_LAN_KEY=your_lan_play_api_key_here
 
-# 4. Start the bot
+# 4. Create docker-compose.yml (or use the one below)
+cat > docker-compose.yml << 'EOF'
+version: '3.8'
+services:
+  lanplay-discordbot:
+    image: garohrl/lanplay-discordbot:latest
+    container_name: lanplay-discordbot
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./data:/app/data
+EOF
+
+# 5. Start the bot
 docker-compose up -d
 ```
 
@@ -104,11 +151,18 @@ docker-compose up -d
 ```bash
 docker run -d \
   --name lanplay-discordbot \
+  --restart unless-stopped \
   -e TOKEN=your_discord_bot_token_here \
   -e API_LAN_KEY=your_lan_play_api_key_here \
-  -v bot_data:/app/data \
+  -v $(pwd)/data:/app/data \
   garohrl/lanplay-discordbot:latest
 ```
+
+**⚠️ Required environment variables**
+- `TOKEN`: Your Discord Bot Token (from Discord Developer Portal)
+- `API_LAN_KEY`: Your LAN Play API Key (from lan-play.com)
+
+**💡 Persistence**: To preserve custom server configurations and data between restarts, mount a volume to `/app/data` as shown above.
 
 #### 🛠️ Manual Installation
 
