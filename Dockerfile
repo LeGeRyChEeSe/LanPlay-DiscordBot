@@ -35,15 +35,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
     && locale-gen en_US.UTF-8 \
-    && curl -LsSf https://astral.sh/uv/install.sh | sh \
-    && export PATH="/root/.local/bin:$PATH"
+    && curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Add uv to PATH for subsequent steps
+ENV PATH="/root/.local/bin:$PATH"
 
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies with uv and remove build tools after
-RUN uv pip install -r requirements.txt \
-    && apt-get remove --purge -y gcc libc6-dev curl ca-certificates \
+# Install Python dependencies with uv and remove build tools after (keep ca-certificates)
+RUN /root/.local/bin/uv pip install --system -r requirements.txt \
+    && apt-get remove --purge -y gcc libc6-dev curl \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
