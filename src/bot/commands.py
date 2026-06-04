@@ -1,21 +1,12 @@
-"""Discord bot command handlers."""
-
-
+"""Discord bot command handlers using discord.py."""
 
 import logging
-
-import re
 from datetime import datetime, timezone
+from typing import List, Optional
 
-from typing import List
-
-
-
-import disnake
-from disnake import SelectOption
-from disnake.ext import commands
-from disnake.ui import Button, Select
-
+import discord
+from discord import app_commands
+from discord.ext import commands
 
 from src.utils.lanplay_client import LanPlayClient, create_custom_server
 from src.utils.rate_limiter import DISCOVERY_RATE_LIMITER, ADD_SERVER_RATE_LIMITER
@@ -25,363 +16,259 @@ from src.utils.server_manager import (
 )
 from src.utils.localization import get_localization, format_uptime_text
 from src.utils.version import version_manager
-from src.utils.session_manager import SessionManager
 from src.config.settings import LAN_MENU_URL, LAN_CONFIG_URL, IMAGE_LANPLAY_URL
 from src.utils.constants import (
     MAX_SELECT_OPTIONS,
-    EMOJI_LIMIT_STANDARD,
-    EMOJI_LIMIT_SOFT,
     SERVER_FORMAT_PATTERN,
-    TINFOIL_CACHE_TTL_HOURS,
 )
-from src.config.settings import TOKEN, API_LAN_KEY, LOCALE_DIR, TIMEZONE, LOCALE_SETTING
 
 logger = logging.getLogger(__name__)
 
 
-
-
 class LanPlayCommands(commands.Cog):
-
     """LAN Play Discord bot commands."""
 
-    
-
-    def __init__(self, bot: commands.InteractionBot, lan_servers: dict):
-
+    def __init__(self, bot: commands.Bot, lan_servers: dict):
         self.bot = bot
-
         self.lan_servers = lan_servers
-
         self.lanplay_client = LanPlayClient()
 
-        self.session_manager = SessionManager()
+    def _validate_server_format(self, server: str) -> bool:
+        """Validate server format (hostname:port)."""
+        return bool(SERVER_FORMAT_PATTERN.match(server))
 
-
-
-    @commands.slash_command(name="lan")
-
-    async def lan_command(self, inter: disnake.ApplicationCommandInteraction):
-
-
-        # Rate limit check
-        if not DISCOVERY_RATE_LIMITER.is_allowed(inter.author.id):
-            await inter.response.send_message(
-                "You are using this command too frequently. Please wait a moment before trying again.",
-                ephemeral=True
-            )
-            return
-
-        """Display current games on LAN Play servers. {{LAN_DESCRIPTION}}"""
-
-        embed = disnake.Embed(color=disnake.Color.blue())
-
-        embed.set_thumbnail(url=IMAGE_LANPLAY_URL)
-
-        embed.title = get_localization(self.bot, "SERVER_SELECT", inter.locale)
-
-
-
-        components = [
-
-            Button(
-
-                style=disnake.ButtonStyle.url, 
-
-                label=get_localization(self.bot, "SITE_LANPLAY", inter.locale), 
-
-                url=LAN_MENU_URL
-
-            ),
-
-            Button(
-
-                style=disnake.ButtonStyle.url, 
-
-                label=get_localization(self.bot, "CONFIG_LANPLAY", inter.locale), 
-
-                url=LAN_CONFIG_URL
-
-            ),
-
-            Select(
-
-                placeholder=get_localization(self.bot, "SERVER_SELECT_BUTTON", inter.locale),
-
-                custom_id=f"lan_servers_{inter.author.id}",
-
-                options=self._create_server_options(inter.locale)[:MAX_SELECT_OPTIONS]
-
-            )
-
+    def _create_server_options(self, locale: discord.Locale) -> List[discord.SelectOption]:
+        """Create server selection options sorted by uptime."""
+        # Filter out servers without friendly_name and sort by uptime
+        valid_servers = [
+            server for server in self.lan_servers["monitors"]
+            if server.get("friendly_name")  # Only include servers with friendly_name
         ]
-    @commands.slash_command(name="help", contexts=disnake.InteractionContextTypes.guild | disnake.InteractionContextTypes.bot_dm | disnake.InteractionContextTypes.private_channel)
 
-    async def help_command(self, inter: disnake.ApplicationCommandInteraction):
+        def _safe_uptime(server: dict) -> float:
+            """Safely extract uptime ratio, defaulting to 0.0."""
+            try:
+                val = server.get("all_time_uptime_ratio", "0")
+                return float(val) if val is not None else 0.0
+            except (ValueError, TypeError):
+                return 0.0
 
-        """Display help menu for LAN's Bot commands. {{HELP_DESCRIPTION}}"""
+        sorted_servers = sorted(valid_servers, key=_safe_uptime, reverse=True)
+        logger.info(f"_create_server_options: {len(self.lan_servers['monitors'])} total monitors, {len(valid_servers)} with friendly_name")
 
+        options = []
+        for server in sorted_servers[:MAX_SELECT_OPTIONS]:
+            try:
+                uptime_ratio = server.get("all_time_uptime_ratio", "0") or "0"
+                desc = format_uptime_text(uptime_ratio, locale, self.bot) or ""
+                label = str(server["friendly_name"])
+                value = str(server["friendly_name"])
+                options.append(discord.SelectOption(
+                    label=label,
+                    value=value,
+                    description=desc
+                ))
+            except Exception as e:
+                logger.warning(f"Skipping server {server.get('friendly_name', '?')}: {e}")
+
+        # Always ensure at least one option to prevent Discord API validation error.
+        if not options:
+            label = get_localization(self.bot, "NO_SERVERS_AVAILABLE", locale) or \
+                    "No servers available"
+            description = get_localization(self.bot, "ADD_SERVERS_HINT", locale) or \
+                          "Use /add to add a server"
+            logger.warning(f"No valid servers found, using fallback option: label={label!r}")
+            options = [
+                discord.SelectOption(
+                    label=label,
+                    value="no_servers",
+                    description=description,
+                    default=True
+                )
+            ]
+
+        logger.info(f"_create_server_options returning {len(options)} options")
+        return options
+
+    # Helper method to get timestamp
+    def _get_timestamp(self) -> datetime:
+        """Get current UTC timestamp."""
+        return datetime.now(timezone.utc)
+
+    @app_commands.command(name="lan", description="Display current games on LAN Play servers")
+    async def lan_command(self, interaction: discord.Interaction):
+        """Display current games on LAN Play servers."""
         # Rate limit check
-        if not DISCOVERY_RATE_LIMITER.is_allowed(inter.author.id):
-            await inter.response.send_message(
+        if not DISCOVERY_RATE_LIMITER.is_allowed(interaction.user.id):
+            await interaction.response.send_message(
                 "You are using this command too frequently. Please wait a moment before trying again.",
                 ephemeral=True
             )
             return
 
-        embed = disnake.Embed(
+        try:
+            embed = discord.Embed(color=discord.Color.blue())
+            embed.set_thumbnail(url=IMAGE_LANPLAY_URL)
+            embed.title = get_localization(self.bot, "SERVER_SELECT", interaction.locale)
 
-            title=get_localization(self.bot, "HELP_TITLE", inter.locale),
+            # Build options with defensive fallback — never send empty options to Discord
+            server_options = self._create_server_options(interaction.locale)
+            logger.info(f"lan_command: {len(server_options)} options generated")
 
-            color=disnake.Color.blue(),
+            if not server_options or len(server_options) == 0:
+                logger.warning("No server options generated for /lan command, using hardcoded fallback")
+                server_options = [
+                    discord.SelectOption(
+                        label=get_localization(self.bot, "NO_SERVERS_AVAILABLE", interaction.locale) or get_localization(self.bot, "NO_SERVERS_AVAILABLE", discord.Locale.american_english) or "No servers available",
+                        value="no_servers",
+                        description=get_localization(self.bot, "ADD_SERVERS_HINT", interaction.locale) or get_localization(self.bot, "ADD_SERVERS_HINT", discord.Locale.american_english) or "Use /add to add a server",
+                        default=True
+                    )
+                ]
 
-            timestamp=get_timestamp()
+            # Use factory function that properly creates Select with options for discord.py 2.x
+            from src.bot.events import make_server_select_view
 
+            logger.info(f"lan_command: calling make_server_select_view with {len(server_options)} options")
+            view = make_server_select_view(
+                bot=self.bot,
+                lan_servers=self.lan_servers,
+                user_id=str(interaction.user.id),
+                options=server_options[:MAX_SELECT_OPTIONS],
+                locale=interaction.locale
+            )
+
+            # Verify the Select has options before sending (safety check)
+            select_item = None
+            for item in view.children:
+                if isinstance(item, discord.ui.Select):
+                    select_item = item
+                    break
+            if not select_item or not getattr(select_item, 'options', None):
+                logger.error("Select component has no options after construction! Using hardcoded fallback.")
+                # Recreate with guaranteed options
+                from src.bot.events import make_server_select_view as mssv
+                view = mssv(
+                    bot=self.bot,
+                    lan_servers=self.lan_servers,
+                    user_id=str(interaction.user.id),
+                    options=[discord.SelectOption(label=get_localization(self.bot, "NO_SERVERS_AVAILABLE", interaction.locale) or get_localization(self.bot, "NO_SERVERS_AVAILABLE", discord.Locale.american_english) or "No servers available", value="no_servers", description=get_localization(self.bot, "ADD_SERVERS_HINT", interaction.locale) or get_localization(self.bot, "ADD_SERVERS_HINT", discord.Locale.american_english) or "Use /add to add a server", default=True)],
+                    locale=interaction.locale
+                )
+                logger.info(f"lan_command: recreated Select with fallback options")
+
+            # Verify AGAIN before sending
+            final_select = None
+            for item in view.children:
+                if isinstance(item, discord.ui.Select):
+                    final_select = item
+                    break
+            if not final_select or not getattr(final_select, 'options', None) or len(getattr(final_select, 'options', [])) == 0:
+                logger.critical("CRITICAL: Select still has no options after all fallbacks! Creating emergency fallback.")
+                from src.bot.events import make_server_select_view as mssv2
+                view = mssv2(
+                    bot=self.bot,
+                    lan_servers=self.lan_servers,
+                    user_id=str(interaction.user.id),
+                    options=[discord.SelectOption(label="No servers available", value="no_servers", description="Use /add to add a server", default=True)],
+                    locale=interaction.locale
+                )
+
+            # Add URL buttons to the view
+            view.add_item(discord.ui.Button(
+                style=discord.ButtonStyle.url, 
+                label=get_localization(self.bot, "SITE_LANPLAY", interaction.locale) or "LAN Play Website", 
+                url=LAN_MENU_URL
+            ))
+            view.add_item(discord.ui.Button(
+                style=discord.ButtonStyle.url, 
+                label=get_localization(self.bot, "CONFIG_LANPLAY", interaction.locale) or "Setup Guide", 
+                url=LAN_CONFIG_URL
+            ))
+
+            await interaction.response.send_message(embed=embed, view=view)
+
+        except Exception as e:
+            logger.error(f"Error in /lan command: {e}", exc_info=True)
+            if not interaction.response.is_done():
+                await interaction.response.send_message(
+                    f"An error occurred while loading server data. Please try again later.",
+                    ephemeral=True
+                )
+
+    @app_commands.command(name="help", description="Display help menu for LAN's Bot commands")
+    @app_commands.allowed_contexts(
+        guilds=True,
+        dms=True,
+        private_channels=True
+    )
+    @app_commands.allowed_installs(
+        guilds=True,
+        users=True
+    )
+    async def help_command(self, interaction: discord.Interaction):
+        """Display help menu for LAN's Bot commands."""
+        # Rate limit check
+        if not DISCOVERY_RATE_LIMITER.is_allowed(interaction.user.id):
+            await interaction.response.send_message(
+                "You are using this command too frequently. Please wait a moment before trying again.",
+                ephemeral=True
+            )
+            return
+
+        embed = discord.Embed(
+            title=get_localization(self.bot, "HELP_TITLE", interaction.locale),
+            color=discord.Color.blue(),
+            timestamp=self._get_timestamp()
         )
-
-        embed.set_thumbnail(self.bot.user.display_avatar.url)
-
-        
+        embed.set_thumbnail(url=str(self.bot.user.display_avatar.url))
 
         description = ""
-
-        for command in self.bot.slash_commands:
-
+        for command in self.bot.tree.get_commands():
             localized_desc = get_localization(
-
-                self.bot, f"{command.name.upper()}_DESCRIPTION", inter.locale
-
+                self.bot, f"{command.name.upper()}_DESCRIPTION", interaction.locale
             )
-
-            description += f"`/{command.qualified_name}`: {localized_desc}\n"
-
-        
+            description += f"`/{command.name}`: {localized_desc}\n"
 
         embed.description = description
 
-        
-
         # Add version information
-
         version_info = version_manager.get_version_info()
-
         version_lines = [
-
             f"**Version:** {version_info['version']}",
-
             f"**Major:** {version_info['major']}",
-
             f"**Minor:** {version_info['minor']}",
-
             f"**Patch:** {version_info['patch']}",
-
         ]
-
         if version_info['prerelease']:
-
             version_lines.append(f"**Pre-release:** {version_info['prerelease']}")
-
         if version_info['build']:
-
             version_lines.append(f"**Build:** {version_info['build']}")
-
         version_value = "\n".join(version_lines)
 
-
-
         embed.add_field(
-
             name="📋 Version Details",
-
             value=version_value,
-
             inline=False
-
         )
-    @commands.slash_command(name="delete")
-
-    @commands.default_member_permissions(administrator=True)
-
-    async def delete_server_command(
-
-        self, 
-
-        inter: disnake.ApplicationCommandInteraction, 
-
-        server: str
-
-    ):
-
-        """
-
-        Remove a custom LAN Play server from the list. {{DELETE_DESCRIPTION}}
-
-
-
-        Parameters
-
-        ----------
-
-        server: :class:`str`
-
-            The custom server to remove (e.g., 'example.com:11451') {{DELETE_PARAMETER}}
-
-        """
-        if inter.guild is None:
-            await inter.response.send_message(
-                "Cette commande n'est disponible que dans les serveurs.",
-                ephemeral=True
-            )
-            return
-
-        if not self._validate_server_format(server):
-
-            await inter.response.send_message(
-
-                get_localization(self.bot, "DELETE_ERROR", inter.locale),
-
-                ephemeral=True
-
-            )
-
-            return
-
-
-
-        custom_servers = await load_custom_servers()
-
-        custom_server = get_custom_server_by_name(custom_servers, server)
-
         
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
-        if not custom_server:
-            return
-
-
-
-        updated_servers = remove_custom_server(custom_servers, server)
-
-        
-
-        if await save_custom_servers(updated_servers):
-
-            # Update runtime server list
-
-            self.lan_servers["monitors"].remove(custom_server)
-
-            
-
-            await inter.response.send_message(
-
-                get_localization(self.bot, "DELETE_SUCCESS", inter.locale, server=server),
-
-                ephemeral=True
-
-            )
-
-        else:
-            await inter.response.send_message(
-                f"Failed to join session `{session_id}`. It may be full, not exist, or not accepting players.",
-                ephemeral=True
-            )
-            await inter.response.send_message(
-                "Failed to save server configuration.",
-                ephemeral=True
-            )
-
-    async def server_autocomplete(
-
-        self, 
-
-        inter: disnake.ApplicationCommandInteraction, 
-
-        server: str
-
-    ) -> List[str]:
-
-        """Autocomplete for server deletion."""
-
-        custom_servers = await load_custom_servers()
-
-        return [srv["friendly_name"] for srv in custom_servers]
-
-
-
-    def _create_server_options(self, locale: disnake.Locale) -> List[SelectOption]:
-
-        """Create server selection options sorted by uptime."""
-
-        sorted_servers = sorted(
-
-            self.lan_servers["monitors"], 
-
-            key=lambda x: float(x.get("all_time_uptime_ratio", "0")), 
-
-            reverse=True
-
-        )
-
-        
-
-        return [
-
-            SelectOption(
-
-                label=server["friendly_name"],
-
-                value=server["friendly_name"],
-
-                description=format_uptime_text(
-
-                    server.get("all_time_uptime_ratio", "0"), 
-
-                    locale, 
-
-                    self.bot
-
-                )
-
-            )
-
-            for server in sorted_servers
-
-        ]
-
-
-
-
-    @commands.slash_command(name="add")
-    @commands.default_member_permissions(administrator=True)
-    async def add_server_command(
-        self,
-        inter: disnake.ApplicationCommandInteraction,
-        server: str
-    ):
-        """
-        Add a custom LAN Play server to the list. {{ADD_DESCRIPTION}}
-
-        Parameters
-        ----------
-        server: :class:`str`
-            The custom server to add (e.g., 'example.com:11451') {{ADD_PARAMETER}}
-        """
-        if inter.guild is None:
-            await inter.response.send_message(
-                "Cette commande n'est disponible que dans les serveurs.",
-                ephemeral=True
-            )
-            return
-
+    @app_commands.command(name="add", description="Add a custom LAN Play server to the list")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def add_server_command(self, interaction: discord.Interaction, server: str):
+        """Add a custom LAN Play server to the list."""
         # Rate limit check
-        if not ADD_SERVER_RATE_LIMITER.is_allowed(inter.author.id):
-            await inter.response.send_message(
+        if not ADD_SERVER_RATE_LIMITER.is_allowed(interaction.user.id):
+            await interaction.response.send_message(
                 "You are using this command too frequently. Please wait a moment before trying again.",
                 ephemeral=True
             )
             return
+            
         if not self._validate_server_format(server):
-            await inter.response.send_message(
-                get_localization(self.bot, "ADD_ERROR", inter.locale), 
+            await interaction.response.send_message(
+                get_localization(self.bot, "ADD_ERROR", interaction.locale),
                 ephemeral=True
             )
             return
@@ -389,8 +276,8 @@ class LanPlayCommands(commands.Cog):
         custom_servers = await load_custom_servers()
         
         if not add_custom_server(custom_servers, server, self.lan_servers):
-            await inter.response.send_message(
-                get_localization(self.bot, "ADD_EXISTS", inter.locale, server=server),
+            await interaction.response.send_message(
+                get_localization(self.bot, "ADD_EXISTS", interaction.locale, server=server),
                 ephemeral=True
             )
             return
@@ -398,285 +285,58 @@ class LanPlayCommands(commands.Cog):
         if await save_custom_servers(custom_servers):
             # Update runtime server list
             self.lan_servers["monitors"].append(create_custom_server(server))
-            
-            await inter.response.send_message(
-                get_localization(self.bot, "ADD_SUCCESS", inter.locale, server=server),
+            await interaction.response.send_message(
+                get_localization(self.bot, "ADD_SUCCESS", interaction.locale, server=server),
                 ephemeral=True
             )
         else:
-            await inter.response.send_message(
-                f"Failed to join session `{session_id}`. It may be full, not exist, or not accepting players.",
-                ephemeral=True
-            )
-            await inter.response.send_message(
+            await interaction.response.send_message(
                 "Failed to save server configuration.",
                 ephemeral=True
             )
-    @commands.slash_command(name="create", contexts=disnake.InteractionContextTypes.guild | disnake.InteractionContextTypes.bot_dm | disnake.InteractionContextTypes.private_channel)
 
-    async def create_session_command(
-
-        self,
-
-        inter: disnake.ApplicationCommandInteraction,
-
-        game: str,
-
-        host: str,
-
-        max_players: int = 4,
-
-        map_name: str = None,
-
-        game_type: str = None,
-
-        password: str = None
-
-    ):
-
-        """
-
-        Create a new LAN Play session.
-
-
-
-        Parameters
-
-        ----------
-
-        game: :class:`str`
-
-            The game to play (e.g., 'Super Mario Odyssey')
-
-        host: :class:`str`
-
-            The host IP or hostname (e.g., '192.168.1.100:11451')
-
-        max_players: :class:`int`
-
-            Maximum number of players (default: 4)
-
-        map_name: :class:`str`
-
-            Map or level to play (optional)
-
-        game_type: :class:`str`
-
-            Type of game (e.g., 'race', 'battle') (optional)
-
-        password: :class:`str`
-
-            Password for the session (optional)
-
-        """
-
-        if inter.guild is None:
+    @app_commands.command(name="delete", description="Remove a custom LAN Play server from the list")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def delete_server_command(self, interaction: discord.Interaction, server: str):
+        """Remove a custom LAN Play server from the list."""
+        if not self._validate_server_format(server):
+            await interaction.response.send_message(
+                get_localization(self.bot, "DELETE_ERROR", interaction.locale),
+                ephemeral=True
+            )
             return
 
-
-
-        # Use the host as the host player name for simplicity; in a real scenario, you might want to ask for the player name.
-
-        host_player_name = inter.author.display_name
-
-        session = self.session_manager.create_session(
-
-            game=game,
-
-            host=host,
-
-            host_player_name=host_player_name,
-
-            max_players=max_players,
-
-            map_name=map_name,
-
-            game_type=game_type,
-
-            password=password
-
-        )
-    @commands.slash_command(name="join", contexts=disnake.InteractionContextTypes.guild | disnake.InteractionContextTypes.bot_dm | disnake.InteractionContextTypes.private_channel)
-
-    async def join_session_command(
-
-        self,
-
-        inter: disnake.ApplicationCommandInteraction,
-
-        session_id: str
-
-    ):
-
-        """
-
-        Join an existing LAN Play session.
-
-
-
-        Parameters
-
-        ----------
-
-        session_id: :class:`str`
-
-            The ID of the session to join
-
-        """
-
-        if inter.guild is None:
+        custom_servers = await load_custom_servers()
+        custom_server = get_custom_server_by_name(custom_servers, server)
+        
+        if not custom_server:
+            await interaction.response.send_message(
+                get_localization(self.bot, "DELETE_ERROR", interaction.locale),
+                ephemeral=True
+            )
             return
 
-
-
-        player_name = inter.author.display_name
-
-        success = self.session_manager.join_session(session_id, player_name)
-        if success:
-            await inter.response.send_message(
-                f"Joined session `{session_id}`!",
+        updated_servers = remove_custom_server(custom_servers, server)
+        
+        if await save_custom_servers(updated_servers):
+            # Update runtime server list
+            self.lan_servers["monitors"].remove(custom_server)
+            await interaction.response.send_message(
+                get_localization(self.bot, "DELETE_SUCCESS", interaction.locale, server=server),
                 ephemeral=True
             )
         else:
-            await inter.response.send_message(
-                f"Failed to join session `{session_id}`. It may be full, not exist, or not accepting players.",
+            await interaction.response.send_message(
+                "Failed to save server configuration.",
                 ephemeral=True
             )
-    @commands.slash_command(name="leave", contexts=disnake.InteractionContextTypes.guild | disnake.InteractionContextTypes.bot_dm | disnake.InteractionContextTypes.private_channel)
 
-    async def leave_session_command(
-
-        self,
-
-        inter: disnake.ApplicationCommandInteraction
-
-    ):
-
-        """
-if inter.guild is None:
-    await inter.response.send_message(
-        "This command is only available in servers.",
-        ephemeral=True
-    )
-    return
-
-player_name = inter.author.display_name
-
-# Find a session where the player is a member
-session_to_leave = None
-for session in self.session_manager.get_active_sessions():
-    if player_name in session.current_players:
-        session_to_leave = session
-        break
-
-if session_to_leave is None:
-    await inter.response.send_message(
-        "You are not in any active session.",
-        ephemeral=True
-    )
-    return
-
-success = self.session_manager.leave_session(session_to_leave.id, player_name)
-if success:
-    await inter.response.send_message(
-        f"Left session `{session_to_leave.id}".
-        ephemeral=True
-    )
-else:
-    await inter.response.send_message(
-        f"Failed to leave session `{session_to_leave.id}".
-        ephemeral=True
-    )
-"""
-
-
-    @commands.slash_command(name="discover", contexts=disnake.InteractionContextTypes.guild | disnake.InteractionContextTypes.bot_dm | disnake.InteractionContextTypes.private_channel)
-    async def discover_command(self, inter: disnake.ApplicationCommandInteraction):
-        """
-        Discover LAN Play servers and display current games.
-        """
-
-        # Rate limit check
-        if not DISCOVERY_RATE_LIMITER.is_allowed(inter.author.id):
-            await inter.response.send_message(
-                "Vous utilisez cette commande trop fréquemment. Veuillez patienter un moment avant de réessayer.",
-                ephemeral=True
-            )
-            return
-
-        await inter.response.defer()
-
-        try:
-            # Récupérer la liste des serveurs LAN Play
-            lan_servers_data = await get_lan_servers()
-            monitors = lan_servers_data.get("monitors", [])
-
-            if not monitors:
-                await inter.followup.send(
-                    "Aucun serveur LAN Play trouvé.",
-                    ephemeral=True
-                )
-                return
-
-            embed = disnake.Embed(
-                title="🔍 Découverte des serveurs LAN Play",
-                color=disnake.Color.green(),
-                timestamp=datetime.now(timezone.utc)
-            )
-
-            # Limiter le nombre de serveurs pour éviter les embeds trop gros
-            max_servers_to_show = 10
-            servers_to_process = monitors[:max_servers_to_show]
-
-            for server_info in servers_to_process:
-                server_url = server_info.get("url")
-                friendly_name = server_info.get("friendly_name", "Unknown")
-
-                if not server_url:
-                    continue
-
-                try:
-                    # Obtenir les informations du serveur
-                    server_data = await self.lanplay_client.get_server_info(server_url)
-
-                    if server_data and server_data.get("room"):
-                        rooms = server_data["room"]
-                        for room in rooms:
-                            game_name = room.get("gameName", "Jeu inconnu")
-                            host_player = room.get("hostPlayerName", "Hôte inconnu")
-                            node_count = room.get("nodeCount", 0)
-                            node_count_max = room.get("nodeCountMax", 0)
-
-                            embed.add_field(
-                                name=f"🎮 {game_name}",
-                                value=f"**Hôte:** {friendly_name}\n**Joueurs:** {node_count}/{node_count_max}\n**Hôte de la partie:** {host_player}",
-                                inline=True
-                            )
-                    else:
-                        # Serveur sans rooms actives
-                        embed.add_field(
-                            name=f"⚪ {friendly_name}",
-                            value=f"**Statut:** Serveur en ligne, aucune partie active\n**URL:** {server_url}",
-                            inline=True
-                        )
-                except Exception as e:
-                    logger.error(f"Erreur lors de l'interrogation du serveur {friendly_name}: {e}")
-                    embed.add_field(
-                        name=f"❌ {friendly_name}",
-                        value=f"**Erreur:** Impossible de contacter le serveur\n**URL:** {server_url}",
-                        inline=True
-                    )
-
-            if len(monitors) > max_servers_to_show:
-                embed.set_footer(text=f"Et {len(monitors) - max_servers_to_show} autres serveurs...")
-            else:
-                embed.set_footer(text=f"{len(monitors)} serveur(s) LAN Play vérifié(s)")
-
-            await inter.followup.send(embed=embed)
-
-        except Exception as e:
-            logger.error(f"Erreur lors de la découverte des serveurs LAN Play: {e}")
-            await inter.followup.send(
-                "Une erreur est survenue lors de la découverte des serveurs.",
-                ephemeral=True
-            )
+    @delete_server_command.autocomplete('server')
+    async def server_autocomplete(self, interaction: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
+        """Autocomplete for server deletion."""
+        custom_servers = await load_custom_servers()
+        return [
+            app_commands.Choice(name=str(srv["friendly_name"]), value=str(srv["friendly_name"]))
+            for srv in custom_servers
+            if current.lower() in str(srv["friendly_name"]).lower()
+        ][:25]  # Discord limits to 25 choices
